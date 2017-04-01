@@ -110,7 +110,9 @@ SECTIONS
 		end = __end__;
 		*(.heap*)
 		__HeapLimit = .;
-	} > ram 
+		PROVIDE(__heap_start = __HeapLimit);
+		PROVIDE(__heap_end = __end__);
+	} > ram
 	
 	/* .stack_dummy section doesn't contains any symbols. It is only
 	* used for linker to calculate size of stack sections, and assign

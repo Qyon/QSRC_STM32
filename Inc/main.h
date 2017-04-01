@@ -41,6 +41,18 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define az_enable_Pin GPIO_PIN_12
+#define az_enable_GPIO_Port GPIOB
+#define az_dir_Pin GPIO_PIN_13
+#define az_dir_GPIO_Port GPIOB
+#define az_step_Pin GPIO_PIN_14
+#define az_step_GPIO_Port GPIOB
+#define el_enable_Pin GPIO_PIN_3
+#define el_enable_GPIO_Port GPIOB
+#define el_dir_Pin GPIO_PIN_4
+#define el_dir_GPIO_Port GPIOB
+#define el_step_Pin GPIO_PIN_5
+#define el_step_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
