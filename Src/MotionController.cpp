@@ -45,11 +45,11 @@ void MotionController::onTimer() {
 
         if (speed_current > 0){
             position_current ++;
-            HAL_GPIO_WritePin(gpio, dir_pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(gpio, dir_pin, GPIO_PIN_RESET);
         }
         if (speed_current < 0){
             position_current --;
-            HAL_GPIO_WritePin(gpio, dir_pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(gpio, dir_pin, GPIO_PIN_SET);
         }
 
         uint16_t time = (uint16_t) ((1.0f / fabsf(speed_current)) * 40000);

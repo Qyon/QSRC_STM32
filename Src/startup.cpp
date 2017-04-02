@@ -33,16 +33,23 @@ void startup() {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1){
-
-        az.moveTo(10);
-        HAL_Delay(5000);
-
-        az.moveTo(90);
-        HAL_Delay(5000);
-
-        az.moveTo(0);
-        while (az.isRunning());
-        HAL_Delay(500);
+        el.moveTo(10);
+        while (el.isRunning());
+        HAL_Delay(1000);
+        el.moveTo(0);
+        while (el.isRunning());
+        HAL_Delay(1000);
+//        az.moveTo(10);
+//        el.moveTo(5);
+//        HAL_Delay(5000);
+//
+//        az.moveTo(90);
+//        HAL_Delay(5000);
+//
+//        az.moveTo(0);
+//        el.moveTo(0);
+//        while (az.isRunning());
+//        HAL_Delay(500);
     }
 #pragma clang diagnostic pop
 }

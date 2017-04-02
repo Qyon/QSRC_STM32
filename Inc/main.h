@@ -43,17 +43,21 @@
 
 #define green_led_Pin GPIO_PIN_13
 #define green_led_GPIO_Port GPIOC
+#define az_encoder_cs_Pin GPIO_PIN_0
+#define az_encoder_cs_GPIO_Port GPIOB
+#define el_encoder_cs_Pin GPIO_PIN_1
+#define el_encoder_cs_GPIO_Port GPIOB
 #define az_enable_Pin GPIO_PIN_12
 #define az_enable_GPIO_Port GPIOB
 #define az_dir_Pin GPIO_PIN_13
 #define az_dir_GPIO_Port GPIOB
 #define az_step_Pin GPIO_PIN_14
 #define az_step_GPIO_Port GPIOB
-#define el_enable_Pin GPIO_PIN_3
+#define el_enable_Pin GPIO_PIN_5
 #define el_enable_GPIO_Port GPIOB
-#define el_dir_Pin GPIO_PIN_4
+#define el_dir_Pin GPIO_PIN_6
 #define el_dir_GPIO_Port GPIOB
-#define el_step_Pin GPIO_PIN_5
+#define el_step_Pin GPIO_PIN_7
 #define el_step_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
