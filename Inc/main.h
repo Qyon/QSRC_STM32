@@ -41,6 +41,8 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define green_led_Pin GPIO_PIN_13
+#define green_led_GPIO_Port GPIOC
 #define az_enable_Pin GPIO_PIN_12
 #define az_enable_GPIO_Port GPIOB
 #define az_dir_Pin GPIO_PIN_13

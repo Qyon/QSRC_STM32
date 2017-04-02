@@ -16,8 +16,8 @@ private:
     static const uint32_t STEPS_PER_MOTOR_ROTATION = 6400UL;
     static const uint32_t GEAR_RATIO = 80;
     constexpr static const uint32_t STEPS_PER_ROTATION = (STEPS_PER_MOTOR_ROTATION * GEAR_RATIO);
-    constexpr static const float MAX_STEPS_PER_SECOND = (const float) (STEPS_PER_ROTATION / 10.0);
-    constexpr static const float DEGREES_ACC_MAX = 1.8;
+    constexpr static const float MAX_STEPS_PER_SECOND = (const float) (STEPS_PER_ROTATION / 50.0f);
+    constexpr static const float DEGREES_ACC_MAX = 0.3f;
     float acc_max;
     float speed_max = MAX_STEPS_PER_SECOND;
     float speed_current = 0;
@@ -29,8 +29,8 @@ private:
     uint16_t enable_pin;
     TIM_HandleTypeDef *htim;
 
-    volatile uint32_t position_current = 0;
-    volatile uint32_t position_destination = 0;
+    volatile int32_t position_current = 0;
+    volatile int32_t position_destination = 0;
     volatile uint8_t running = 0;
 
     static uint32_t degreesToSteps(float degrees);

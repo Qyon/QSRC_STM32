@@ -34,9 +34,11 @@ void startup() {
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1){
 
-        az.moveTo(1);
-        while (az.isRunning());
-        HAL_Delay(500);
+        az.moveTo(10);
+        HAL_Delay(5000);
+
+        az.moveTo(90);
+        HAL_Delay(5000);
 
         az.moveTo(0);
         while (az.isRunning());

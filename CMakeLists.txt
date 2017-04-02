@@ -3,12 +3,10 @@ include(CMakeForceCompiler)
 SET(CMAKE_SYSTEM_NAME "Generic")
 SET(CMAKE_SYSTEM_VERSION 1)
 
-set(TOOLCHAIN_DIR D:/Programy/arm_gcc/bin/)
+set(TOOLCHAIN_DIR D:/Programy/gcc-arm-none-eabi-6-2017-q1-update-win32/bin/)
 
 CMAKE_FORCE_C_COMPILER(${TOOLCHAIN_DIR}/arm-none-eabi-gcc.exe GNU)
 CMAKE_FORCE_CXX_COMPILER(${TOOLCHAIN_DIR}/arm-none-eabi-g++.exe GNU)
-
-
 
 project(QSRC_STM32 C ASM CXX)
 
@@ -22,11 +20,11 @@ add_definitions(-D__ASSEMBLY__)
 
 
 SET(LINKER_SCRIPT ${PROJECT_SOURCE_DIR}/STM32F103C8T6.ld)
-SET(COMMON_FLAGS " -mcpu=cortex-m3 -mthumb -Wall -ffunction-sections -g -O3  -g  ")
+SET(COMMON_FLAGS " -mcpu=cortex-m3 -mthumb -Wall -ffunction-sections -O3 -fdata-sections -fno-common -Wdouble-promotion ")
 SET(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -std=c++11")
 SET(CMAKE_C_FLAGS "${COMMON_FLAGS} -std=gnu99")
-#SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map -Wl,--print-gc-sections -T ${LINKER_SCRIPT}")
-SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map --specs=nano.specs -Wl,--gc-sections -T ${LINKER_SCRIPT}")
+#SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map -Wl,--print-gc-sections --specs=nano.specs -T ${LINKER_SCRIPT}")
+SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map -Wl,--gc-sections  --specs=nano.specs -T ${LINKER_SCRIPT}")
 
 file(GLOB_RECURSE USER_SOURCES "*.c")
 file(GLOB_RECURSE USER_SOURCES_CXX "*.cpp")

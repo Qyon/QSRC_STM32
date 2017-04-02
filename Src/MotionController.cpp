@@ -10,6 +10,7 @@
 
 void MotionController::onTimer() {
     if (position_current != position_destination || speed_current){
+        HAL_GPIO_TogglePin(gpio, step_pin);
         int32_t distance = position_destination - position_current;
         float speed_m;
         if (distance){
@@ -50,8 +51,6 @@ void MotionController::onTimer() {
             position_current --;
             HAL_GPIO_WritePin(gpio, dir_pin, GPIO_PIN_RESET);
         }
-        HAL_GPIO_TogglePin(gpio, step_pin);
-        HAL_GPIO_TogglePin(gpio, step_pin);
 
         uint16_t time = (uint16_t) ((1.0f / fabsf(speed_current)) * 40000);
         if (time > 16000){
@@ -62,8 +61,9 @@ void MotionController::onTimer() {
         __HAL_TIM_SET_AUTORELOAD(htim, time);
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
+        HAL_GPIO_TogglePin(gpio, step_pin);
     } else {
-        HAL_GPIO_WritePin(gpio, enable_pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(gpio, enable_pin, GPIO_PIN_SET);
         HAL_TIM_Base_Stop_IT(htim);
         HAL_TIM_Base_Stop(htim);
         running = 0;
@@ -78,7 +78,7 @@ MotionController::MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, 
 void MotionController::moveTo(float angle) {
     position_destination = degreesToSteps(angle);
     if (!running){
-        HAL_GPIO_WritePin(gpio, enable_pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(gpio, enable_pin, GPIO_PIN_RESET);
         running = 1;
         __HAL_TIM_SET_AUTORELOAD(htim, 1);
         HAL_TIM_Base_Start_IT(htim);
