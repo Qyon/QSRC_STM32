@@ -9,8 +9,9 @@
 #include "stm32f1xx_hal.h"
 #include "dma.h"
 #include "tim.h"
-static const uint16_t reload_test = 10000;
-
+/**
+ *
+ */
 class MotionController {
 private:
     static const uint32_t STEPS_PER_MOTOR_ROTATION = 6400UL;
@@ -22,8 +23,6 @@ private:
     float speed_max = MAX_STEPS_PER_SECOND;
     float speed_current = 0;
 
-
-    uint16_t test = reload_test;
     GPIO_TypeDef* gpio;
     uint16_t step_pin;
     uint16_t dir_pin;
