@@ -45,11 +45,11 @@ void MotionController::onTimer() {
 
         if (speed_current > 0){
             position_current ++;
-            HAL_GPIO_WritePin(gpio, dir_pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(gpio, dir_pin, reverse_direction ? GPIO_PIN_SET : GPIO_PIN_RESET);
         }
         if (speed_current < 0){
             position_current --;
-            HAL_GPIO_WritePin(gpio, dir_pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(gpio, dir_pin, reverse_direction ? GPIO_PIN_RESET : GPIO_PIN_SET);
         }
 
         uint16_t time = (uint16_t) ((1.0f / fabsf(speed_current)) * 40000);
@@ -70,8 +70,8 @@ void MotionController::onTimer() {
     }
 }
 
-MotionController::MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, uint16_t step_pin, uint16_t dir_pin, uint16_t enable_pin) : gpio(
-    gpio), step_pin(step_pin), dir_pin(dir_pin), enable_pin(enable_pin), htim(htim) {
+MotionController::MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, uint16_t step_pin, uint16_t dir_pin, uint16_t enable_pin, bool reverse_direction) : gpio(
+    gpio), step_pin(step_pin), dir_pin(dir_pin), enable_pin(enable_pin), htim(htim), reverse_direction(reverse_direction) {
     acc_max = degreesToSteps(DEGREES_ACC_MAX);
 }
 

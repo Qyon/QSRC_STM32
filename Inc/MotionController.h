@@ -28,6 +28,7 @@ private:
     uint16_t dir_pin;
     uint16_t enable_pin;
     TIM_HandleTypeDef *htim;
+    bool reverse_direction = false;
 
     volatile int32_t position_current = 0;
     volatile int32_t position_destination = 0;
@@ -35,7 +36,7 @@ private:
 
     static uint32_t degreesToSteps(float degrees);
 public:
-    MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, uint16_t step_pin, uint16_t dir_pin, uint16_t enable_pin);
+    MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, uint16_t step_pin, uint16_t dir_pin, uint16_t enable_pin, bool reverse_direction);
     void onTimer();
     void moveTo(float angle);
 
