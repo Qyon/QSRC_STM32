@@ -21,12 +21,18 @@ private:
 
     MotionController *az;
     MotionController *el;
+
+    bool debug_enabled = true;
 public:
     RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeDef *dbg_uart, SPI_HandleTypeDef *encoder_spi,
                         GPIO_TypeDef *encoder_az_gpio, uint16_t encoder_az_pin, GPIO_TypeDef *encoder_el_gpio,
                         uint16_t encoder_el_pin, MotionController *az_mc, MotionController *el_mc);
 
     void loop();
+
+    void debug(const char *string);
+
+    void send_serial(UART_HandleTypeDef *uart_handle, const char *string, size_t len);
 };
 
 

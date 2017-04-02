@@ -2,6 +2,7 @@
 // Created by Admin on 2017-04-02.
 //
 
+#include <cstring>
 #include "RotorController.h"
 
 RotorController::RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeDef *dbg_uart, SPI_HandleTypeDef *encoder_spi,
@@ -26,5 +27,13 @@ void RotorController::loop() {
     az->moveTo(0);
     el->moveTo(0);
     while (az->isRunning() || el->isRunning());
+    debug("It is alive!!!");
+}
 
+void RotorController::debug(const char *string) {
+    this->send_serial(this->dbg_uart, string, strlen(string));
+}
+
+void RotorController::send_serial(UART_HandleTypeDef *uart_handle, const char *string, size_t len) {
+    while(HAL_UART_Transmit_DMA(uart_handle, (uint8_t *) string, (uint16_t) len) != HAL_OK);
 }
