@@ -80,6 +80,10 @@ MotionController::MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, 
     acc_max = degreesToSteps(DEGREES_ACC_MAX);
 }
 
+/**
+ * Move to desired angle
+ * @param angle
+ */
 void MotionController::moveTo(float angle) {
     if (angle < angle_minimum){
         angle = angle_minimum;
@@ -90,8 +94,12 @@ void MotionController::moveTo(float angle) {
     moveTo(steps);
 }
 
-void MotionController::moveTo(uint32_t steps) {
-    position_destination = steps;
+/**
+ * Move to desired step
+ * @param target_step
+ */
+void MotionController::moveTo(uint32_t target_step) {
+    position_destination = target_step;
     if (!running){
         HAL_GPIO_WritePin(gpio, enable_pin, GPIO_PIN_RESET);
         running = 1;
