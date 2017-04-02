@@ -12,8 +12,8 @@
 #include "usart.h"
 #include "gpio.h"
 
-MotionController az(&htim2, az_enable_GPIO_Port, az_step_Pin, az_dir_Pin, az_enable_Pin, false);
-MotionController el(&htim3, el_enable_GPIO_Port, el_step_Pin, el_dir_Pin, el_enable_Pin, true);
+MotionController az(&htim2, az_enable_GPIO_Port, az_step_Pin, az_dir_Pin, az_enable_Pin, false, 0, 360);
+MotionController el(&htim3, el_enable_GPIO_Port, el_step_Pin, el_dir_Pin, el_enable_Pin, true, 0, 90);
 RotorController controller(&huart1, &huart1, &hspi1, az_encoder_cs_GPIO_Port, az_encoder_cs_Pin,
                            el_encoder_cs_GPIO_Port, el_encoder_cs_Pin, &az, &el);
 /**

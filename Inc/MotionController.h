@@ -22,6 +22,7 @@ private:
     float speed_max = MAX_STEPS_PER_SECOND;
     float speed_current = 0;
 
+
     uint16_t test = reload_test;
     GPIO_TypeDef* gpio;
     uint16_t step_pin;
@@ -29,6 +30,8 @@ private:
     uint16_t enable_pin;
     TIM_HandleTypeDef *htim;
     bool reverse_direction = false;
+    uint16_t angle_minimum = 0;
+    uint16_t angle_maximum = 360;
 
     volatile int32_t position_current = 0;
     volatile int32_t position_destination = 0;
@@ -36,7 +39,9 @@ private:
 
     static uint32_t degreesToSteps(float degrees);
 public:
-    MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, uint16_t step_pin, uint16_t dir_pin, uint16_t enable_pin, bool reverse_direction);
+    MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, uint16_t step_pin, uint16_t dir_pin,
+                         uint16_t enable_pin, bool reverse_direction, uint16_t angle_minimum,
+                         uint16_t angle_maximum);
     void onTimer();
     void moveTo(float angle);
 
@@ -45,6 +50,8 @@ public:
     float getAngle();
 
     float stepsToDegrees(int32_t steps);
+
+    void moveTo(uint32_t steps);
 };
 
 

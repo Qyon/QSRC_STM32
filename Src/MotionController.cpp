@@ -70,13 +70,28 @@ void MotionController::onTimer() {
     }
 }
 
-MotionController::MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, uint16_t step_pin, uint16_t dir_pin, uint16_t enable_pin, bool reverse_direction) : gpio(
-    gpio), step_pin(step_pin), dir_pin(dir_pin), enable_pin(enable_pin), htim(htim), reverse_direction(reverse_direction) {
+MotionController::MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, uint16_t step_pin, uint16_t dir_pin,
+                                   uint16_t enable_pin, bool reverse_direction, uint16_t angle_minimum,
+                                   uint16_t angle_maximum) : gpio(gpio), step_pin(step_pin), dir_pin(dir_pin),
+                                                             enable_pin(enable_pin), htim(htim),
+                                                             reverse_direction(reverse_direction),
+                                                             angle_minimum(angle_minimum),
+                                                             angle_maximum(angle_maximum) {
     acc_max = degreesToSteps(DEGREES_ACC_MAX);
 }
 
 void MotionController::moveTo(float angle) {
-    position_destination = degreesToSteps(angle);
+    if (angle < angle_minimum){
+        angle = angle_minimum;
+    } else if (angle > angle_maximum){
+        angle = angle_maximum;
+    }
+    uint32_t steps = degreesToSteps(angle);
+    moveTo(steps);
+}
+
+void MotionController::moveTo(uint32_t steps) {
+    position_destination = steps;
     if (!running){
         HAL_GPIO_WritePin(gpio, enable_pin, GPIO_PIN_RESET);
         running = 1;
