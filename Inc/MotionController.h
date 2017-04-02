@@ -41,6 +41,10 @@ public:
     void moveTo(float angle);
 
     bool isRunning();
+
+    float getAngle();
+
+    float stepsToDegrees(int32_t steps);
 };
 
 

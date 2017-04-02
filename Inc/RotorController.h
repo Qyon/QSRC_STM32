@@ -8,6 +8,7 @@
 #include "dma.h"
 #include "tim.h"
 #include "MotionController.h"
+#include <Rot2Prog.h>
 
 class RotorController {
 private:
@@ -32,7 +33,15 @@ public:
 
     void debug(const char *string);
 
-    void send_serial(UART_HandleTypeDef *uart_handle, const char *string, size_t len);
+    void send_serial(UART_HandleTypeDef *uart_handle, const uint8_t *string, size_t len);
+
+    void send_respose_status();
+
+    void getRot2ProgAngle(float angle, uint8_t * angle_response);
+
+    void process_set_command(Rot2ProgCmd *pCmd);
+
+    float readRot2ProgAngle(uint8_t angle_data[4], uint8_t resolution);
 };
 
 

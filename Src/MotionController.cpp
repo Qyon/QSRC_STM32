@@ -93,3 +93,11 @@ uint32_t MotionController::degreesToSteps(float degrees) {
 bool MotionController::isRunning() {
     return running == 1;
 }
+
+float MotionController::getAngle() {
+    return stepsToDegrees(position_current);
+}
+
+float MotionController::stepsToDegrees(int32_t steps) {
+    return   (360.0f * steps / STEPS_PER_ROTATION);
+}

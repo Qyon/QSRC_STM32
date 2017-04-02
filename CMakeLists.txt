@@ -20,7 +20,7 @@ add_definitions(-D__ASSEMBLY__)
 
 
 SET(LINKER_SCRIPT ${PROJECT_SOURCE_DIR}/STM32F103C8T6.ld)
-SET(COMMON_FLAGS " -mcpu=cortex-m3 -mthumb -Wall -ffunction-sections -O3 -fdata-sections -fno-common -Wdouble-promotion ")
+SET(COMMON_FLAGS " -mcpu=cortex-m3 -mthumb -Wall -ffunction-sections -O0 -fdata-sections -fno-common -Wdouble-promotion ")
 SET(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -std=c++11")
 SET(CMAKE_C_FLAGS "${COMMON_FLAGS} -std=gnu99")
 #SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map -Wl,--print-gc-sections --specs=nano.specs -T ${LINKER_SCRIPT}")
