@@ -52,4 +52,5 @@ set(CMAKE_CXX_STANDARD 11)
 
 add_custom_target(program
         DEPENDS ${PROJECT_NAME}.elf
-        COMMAND D:/Programy/stlink-1.3.0-win64/bin/st-flash  --reset write ${BIN_FILE} 0x08000000 )
+        COMMAND D:/Programy/stlink-1.3.0-win64/bin/st-flash  --reset write ${BIN_FILE} 0x08000000
+        COMMENT "flashing ${BIN_FILE}")

@@ -33,12 +33,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-    controller.onSPIComplete(hspi);
+    controller.onSPITxComplete(hspi);
 }
 
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+{
+    controller.onSPIRxComplete(hspi);
+}
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-    controller.onSPIComplete(hspi);
+    controller.onSPIRxComplete(hspi);
 }
 
 /*

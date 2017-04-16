@@ -63,10 +63,11 @@ public:
 
     float readRot2ProgAngle(uint8_t angle_data[4], uint8_t resolution);
 
-    void onSPIComplete(SPI_HandleTypeDef *pDef);
+    void onSPITxComplete(SPI_HandleTypeDef *pDef);
+    void onSPIRxComplete(SPI_HandleTypeDef *pDef);
 
-    void encoderStartDMATransfer();
-    void encoderStartDMATransferRead();
+    void encoderStartSPITransfer();
+    void encoderStartSPITransferRead();
 
     volatile uint32_t s;
 };

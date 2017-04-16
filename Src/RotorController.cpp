@@ -23,7 +23,7 @@ RotorController::RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeD
 
 }
 
-void RotorController::encoderStartDMATransfer() {
+void RotorController::encoderStartSPITransfer() {
     encoder_spi_read = true;
     if (raw_encoder_current == &raw_encoder_az){
         raw_encoder_az = raw_encoder_tmp;
@@ -37,40 +37,29 @@ void RotorController::encoderStartDMATransfer() {
         HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_SET);
     }
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 5; ++i) {
         __NOP();
     }
-    HAL_SPI_Transmit_DMA(encoder_spi, (uint8_t *) &encoder_read_angle_command, 1);
+    HAL_SPI_Transmit_IT(encoder_spi, (uint8_t *) &encoder_read_angle_command, 1);
     tmp ++;
 }
 
-void RotorController::encoderStartDMATransferRead() {
+void RotorController::encoderStartSPITransferRead() {
     encoder_spi_read = false;
-    for (int i = 0; i < 100; ++i) {
-        __NOP();
-    }
     if (raw_encoder_current == &raw_encoder_az){
         HAL_GPIO_TogglePin(encoder_az_gpio, encoder_az_pin);
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 5; ++i) {
             __NOP();
         }
         HAL_GPIO_TogglePin(encoder_az_gpio, encoder_az_pin);
-        for (int i = 0; i < 100; ++i) {
-            __NOP();
-        }
-
     } else {
         HAL_GPIO_TogglePin(encoder_el_gpio, encoder_el_pin);
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 5; ++i) {
             __NOP();
         }
         HAL_GPIO_TogglePin(encoder_el_gpio, encoder_el_pin);
-        for (int i = 0; i < 100; ++i) {
-            __NOP();
-        }
     }
-
-    HAL_SPI_Receive_DMA(encoder_spi, (uint8_t *) &raw_encoder_tmp, 1);
+    HAL_SPI_Receive_IT(encoder_spi, (uint8_t *) &raw_encoder_tmp, 1);
     tmp ++;
 }
 
@@ -78,34 +67,8 @@ void RotorController::encoderStartDMATransferRead() {
 void RotorController::loop() {
     if (!encoder_spi_in_progress){
         encoder_spi_in_progress = true;
-        encoderStartDMATransfer();
+        encoderStartSPITransfer();
     }
-//    HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_RESET);
-//    for (int i = 0; i < 100; ++i) {
-//        __NOP();
-//    }
-//    HAL_SPI_Transmit(encoder_spi, (uint8_t *) &encoder_read_angle_command, 1, 10);
-//    for (int i = 0; i < 100; ++i) {
-//        __NOP();
-//    }
-//    HAL_GPIO_TogglePin(encoder_az_gpio, encoder_az_pin);
-//    for (int i = 0; i < 100; ++i) {
-//        __NOP();
-//    }
-//    HAL_GPIO_TogglePin(encoder_az_gpio, encoder_az_pin);
-//    for (int i = 0; i < 100; ++i) {
-//        __NOP();
-//    }
-//    raw_encoder_tmp = encoder_read_angle_command;
-//    for (int i = 0; i < 100; ++i) {
-//        __NOP();
-//    }
-//    HAL_SPI_Receive(encoder_spi, (uint8_t *) &raw_encoder_tmp, 1, 10);
-//    for (int i = 0; i < 10; ++i) {
-//        __NOP();
-//    }
-//    HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_SET);
-
 
     Rot2ProgCmd cmd;
     if (HAL_UART_Receive(this->comm_uart, (uint8_t *) &cmd, sizeof(Rot2ProgCmd), 300) == HAL_OK){
@@ -125,13 +88,15 @@ void RotorController::loop() {
     //debug("Start!\n");
 //    debug(0xffffffff);
     debug((const char *) &tmp, 4);
-    debug((const uint32_t) (raw_encoder_az & 0x3fff));
-    debug((const uint32_t) (raw_encoder_el & 0x3fff));
+    uint16_t t = (uint16_t) (raw_encoder_az & 0x3fff);
+    debug(t);
+    t = (uint16_t) (raw_encoder_el & 0x3fff);
+    debug(t);
 //    char buff[10];
 //    uint32_t d = (uint32_t) (raw_encoder_tmp & 0x3fff);
 //
 //    sprintf(buff, "%lu\r\n", d);
-//    debug(buff);
+   // debug((const uint32_t) (raw_encoder_tmp & 0x3fff));
 }
 
 void RotorController::debug(const char *string) {
@@ -205,14 +170,18 @@ float RotorController::readRot2ProgAngle(uint8_t *angle_data, uint8_t resolution
     return (((float)tmp) / resolution) - 360.0f;
 }
 
-void RotorController::onSPIComplete(SPI_HandleTypeDef *pDef) {
+void RotorController::onSPITxComplete(SPI_HandleTypeDef *pDef) {
     if (pDef->Instance != this->encoder_spi->Instance){
         return;
     }
-    if (encoder_spi_read){
-        encoderStartDMATransferRead();
-    } else {
-        encoder_spi_in_progress = false;
+    encoderStartSPITransferRead();
+}
+
+
+void RotorController::onSPIRxComplete(SPI_HandleTypeDef *pDef) {
+    if (pDef->Instance != this->encoder_spi->Instance){
+        return;
     }
+    encoderStartSPITransfer();
 }
 
