@@ -15,7 +15,7 @@
 MotionController az(&htim2, az_enable_GPIO_Port, az_step_Pin, az_dir_Pin, az_enable_Pin, false, 0, 360);
 MotionController el(&htim3, el_enable_GPIO_Port, el_step_Pin, el_dir_Pin, el_enable_Pin, true, 0, 90);
 RotorController controller(&huart1, &huart1, &hspi1, az_encoder_cs_GPIO_Port, az_encoder_cs_Pin,
-                           el_encoder_cs_GPIO_Port, el_encoder_cs_Pin, &az, &el);
+                           el_encoder_cs_GPIO_Port, el_encoder_cs_Pin, &az, &el, aux_out_GPIO_Port, aux_out_Pin);
 /**
   * @brief  Period elapsed callback in non blocking mode
   * @param  htim : TIM handle
@@ -31,6 +31,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     }
 }
 
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    controller.onSPIComplete(hspi);
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    controller.onSPIComplete(hspi);
+}
 
 /*
 

@@ -43,6 +43,8 @@
 
 #define green_led_Pin GPIO_PIN_13
 #define green_led_GPIO_Port GPIOC
+#define aux_out_Pin GPIO_PIN_1
+#define aux_out_GPIO_Port GPIOA
 #define az_encoder_cs_Pin GPIO_PIN_0
 #define az_encoder_cs_GPIO_Port GPIOB
 #define el_encoder_cs_Pin GPIO_PIN_1
