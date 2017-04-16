@@ -6,6 +6,8 @@
 #include <math.h>
 #include "RotorController.h"
 
+DS1307 t;
+
 RotorController::RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeDef *dbg_uart,
                                  SPI_HandleTypeDef *encoder_spi, GPIO_TypeDef *encoder_az_gpio,
                                  uint16_t encoder_az_pin, GPIO_TypeDef *encoder_el_gpio, uint16_t encoder_el_pin,
@@ -88,9 +90,8 @@ void RotorController::loop() {
                 break;
         }
     }
-
-    uint16_t az = (uint16_t) (getEncAz() * 360 / 0x3fff);
-    debug((const char *) &az, 2);
+    RTCDateTime dt = t.getDateTime();
+    debug(dt.second);
 }
 
 void RotorController::debug(const char *string) {

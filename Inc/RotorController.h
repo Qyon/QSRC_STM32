@@ -9,6 +9,7 @@
 #include "tim.h"
 #include "MotionController.h"
 #include <Rot2Prog.h>
+#include "ds1307.h"
 
 class RotorController {
 private:
