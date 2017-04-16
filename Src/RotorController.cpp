@@ -37,7 +37,7 @@ void RotorController::encoderStartSPITransfer() {
         HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_SET);
     }
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 15; ++i) {
         __NOP();
     }
     HAL_SPI_Transmit_IT(encoder_spi, (uint8_t *) &encoder_read_angle_command, 1);
@@ -48,16 +48,19 @@ void RotorController::encoderStartSPITransferRead() {
     encoder_spi_read = false;
     if (raw_encoder_current == &raw_encoder_az){
         HAL_GPIO_TogglePin(encoder_az_gpio, encoder_az_pin);
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < 15; ++i) {
             __NOP();
         }
         HAL_GPIO_TogglePin(encoder_az_gpio, encoder_az_pin);
     } else {
         HAL_GPIO_TogglePin(encoder_el_gpio, encoder_el_pin);
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < 15; ++i) {
             __NOP();
         }
         HAL_GPIO_TogglePin(encoder_el_gpio, encoder_el_pin);
+    }
+    for (int i = 0; i < 15; ++i) {
+        __NOP();
     }
     HAL_SPI_Receive_IT(encoder_spi, (uint8_t *) &raw_encoder_tmp, 1);
     tmp ++;
@@ -85,18 +88,9 @@ void RotorController::loop() {
                 break;
         }
     }
-    //debug("Start!\n");
-//    debug(0xffffffff);
-    debug((const char *) &tmp, 4);
-    uint16_t t = (uint16_t) (raw_encoder_az & 0x3fff);
-    debug(t);
-    t = (uint16_t) (raw_encoder_el & 0x3fff);
-    debug(t);
-//    char buff[10];
-//    uint32_t d = (uint32_t) (raw_encoder_tmp & 0x3fff);
-//
-//    sprintf(buff, "%lu\r\n", d);
-   // debug((const uint32_t) (raw_encoder_tmp & 0x3fff));
+
+    uint16_t az = (uint16_t) (getEncAz() * 360 / 0x3fff);
+    debug((const char *) &az, 2);
 }
 
 void RotorController::debug(const char *string) {
@@ -183,5 +177,13 @@ void RotorController::onSPIRxComplete(SPI_HandleTypeDef *pDef) {
         return;
     }
     encoderStartSPITransfer();
+}
+
+uint16_t RotorController::getEncAz() {
+    return (uint16_t) (raw_encoder_az & 0x3fff);
+}
+
+uint16_t RotorController::getEncEl() {
+    return (uint16_t) (raw_encoder_el & 0x3fff);
 }
 

@@ -40,14 +40,9 @@ private:
     uint8_t serial_buffer_debug[256];
 
     uint32_t tmp = 0;
-public:
-    RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeDef *dbg_uart,
-                        SPI_HandleTypeDef *encoder_spi, GPIO_TypeDef *encoder_az_gpio,
-                        uint16_t encoder_az_pin, GPIO_TypeDef *encoder_el_gpio, uint16_t encoder_el_pin,
-                        MotionController *az_mc, MotionController *el_mc, GPIO_TypeDef *aux_gpio,
-                        uint16_t aux_pin);
 
-    void loop();
+    void encoderStartSPITransfer();
+    void encoderStartSPITransferRead();
 
     void debug(const char *string);
     void debug(const char *string, const size_t len);
@@ -63,11 +58,21 @@ public:
 
     float readRot2ProgAngle(uint8_t angle_data[4], uint8_t resolution);
 
+    uint16_t getEncAz();
+    uint16_t getEncEl();
+
+public:
+    RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeDef *dbg_uart,
+                        SPI_HandleTypeDef *encoder_spi, GPIO_TypeDef *encoder_az_gpio,
+                        uint16_t encoder_az_pin, GPIO_TypeDef *encoder_el_gpio, uint16_t encoder_el_pin,
+                        MotionController *az_mc, MotionController *el_mc, GPIO_TypeDef *aux_gpio,
+                        uint16_t aux_pin);
+
+    void loop();
+
     void onSPITxComplete(SPI_HandleTypeDef *pDef);
     void onSPIRxComplete(SPI_HandleTypeDef *pDef);
 
-    void encoderStartSPITransfer();
-    void encoderStartSPITransferRead();
 
     volatile uint32_t s;
 };
