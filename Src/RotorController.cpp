@@ -184,6 +184,7 @@ void RotorController::getRot2ProgAngle(float angle, uint8_t * angle_response) {
     angle_response[2] = (uint8_t) (tmp / 10);
     tmp = (uint16_t) (tmp % 10);
     angle_response[3] = (uint8_t) (tmp % 10);
+
 }
 
 void RotorController::process_set_command(Rot2ProgCmd *pCmd) {

@@ -49,3 +49,7 @@ add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${PROJECT_NAME}.elf> ${BIN_FILE}
         COMMENT "Building ${HEX_FILE} \nBuilding ${BIN_FILE}")
 set(CMAKE_CXX_STANDARD 11)
+
+add_custom_target(program
+        DEPENDS ${PROJECT_NAME}.elf
+        COMMAND D:/Programy/stlink-1.3.0-win64/bin/st-flash  --reset write ${BIN_FILE} 0x08000000 )
