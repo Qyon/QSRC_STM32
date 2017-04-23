@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "stm32f1xx_hal.h"
 
 
-#define DS1307_ADDRESS              (0x68)
+#define DS1307_ADDRESS              (0x68 << 1)
 
 #define DS1307_REG_TIME             (0x00)
 #define DS1307_REG_CONTROL          (0x07)
@@ -78,7 +78,7 @@ public:
     void setOutput(ds1307_sqwOut_t mode);
     void setOutput(bool mode);
 
-    char* dateFormat(const char* dateFormat, RTCDateTime dt);
+    char *dateFormat(char *buffer, const char *dateFormat, RTCDateTime dt);
 
 private:
     RTCDateTime t;

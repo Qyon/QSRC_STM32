@@ -68,30 +68,23 @@ void RotorController::encoderStartSPITransferRead() {
     tmp ++;
 }
 
-
 void RotorController::loop() {
-    if (!encoder_spi_in_progress){
-        encoder_spi_in_progress = true;
-        encoderStartSPITransfer();
-    }
+    static CommandPacket response;
+    if (this->cmd_to_process.header){
+        if (!validateCommandPacket(&this->cmd_to_process)){
+            debug("Invalid command");
+            debug((const char *) &this->cmd_to_process, sizeof(CommandPacket));
+            memset(&this->cmd_to_process, 0, sizeof(this->cmd_to_process));
+            serial_sync_tmp = 0;
+            serial_sync = 0;
+        } else {
+            handleCommand(&this->cmd_to_process, &response);
 
-    Rot2ProgCmd cmd;
-    if (HAL_UART_Receive(this->comm_uart, (uint8_t *) &cmd, sizeof(Rot2ProgCmd), 300) == HAL_OK){
-        switch (cmd.command){
-            case Rot2Prog_COMMAND_STATUS:
-                this->send_respose_status();
-                break;
-            case Rot2Prog_COMMAND_SET:
-                this->process_set_command(&cmd);
-                break;
-            case Rot2Prog_COMMAND_STOP:
-                break;
-            default:
-                break;
+            this->cmd_to_process.header = 0;
+            HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_SET);
+            HAL_UART_Transmit_IT(this->comm_uart, (uint8_t *) &response, sizeof(response));
         }
     }
-    RTCDateTime dt = t.getDateTime();
-    debug(dt.second);
 }
 
 void RotorController::debug(const char *string) {
@@ -186,5 +179,106 @@ uint16_t RotorController::getEncAz() {
 
 uint16_t RotorController::getEncEl() {
     return (uint16_t) (raw_encoder_el & 0x3fff);
+}
+
+void RotorController::init() {
+    if (!encoder_spi_in_progress){
+        encoder_spi_in_progress = true;
+        encoderStartSPITransfer();
+    }
+
+    while(HAL_OK != HAL_UART_Receive_IT(this->comm_uart, (uint8_t *) &(this->serial_sync_tmp), sizeof(serial_sync_tmp)));
+    debug("Start!");
+}
+
+void RotorController::onUSARTRxComplete(UART_HandleTypeDef *huart) {
+    if (huart->Instance != this->comm_uart->Instance){
+        return;
+    }
+    if (serial_sync != packetHeader){
+        serial_sync >>= 8;
+        serial_sync |= ((serial_sync_tmp << 24) & 0xff000000);
+        if (serial_sync == packetHeader){
+            debug("S");
+
+            this->cmd_buffer.header = serial_sync;
+            HAL_UART_Receive_IT(this->comm_uart, (uint8_t *) (&(this->cmd_buffer) + sizeof(this->cmd_buffer.header)), sizeof(this->cmd_buffer) - sizeof(this->cmd_buffer.header));
+        } else {
+            HAL_UART_Receive_IT(this->comm_uart, (uint8_t *) &(this->serial_sync_tmp), sizeof(serial_sync_tmp));
+        }
+    } else {
+        if (!this->cmd_to_process.header){
+            // copy only when previous command processed
+            memcpy(&(this->cmd_to_process), &(this->cmd_buffer), sizeof(this->cmd_buffer));
+        }
+        debug("C");
+        HAL_UART_Receive_IT(this->comm_uart, (uint8_t *) (&(this->cmd_buffer)), sizeof(this->cmd_buffer));
+    }
+}
+
+bool RotorController::validateCommandPacket(CommandPacket *pPacket) {
+    if (pPacket->header != packetHeader){
+        return false;
+    }
+
+    return getPacketCRC(pPacket) == pPacket->crc;
+}
+
+uint16_t RotorController::getPacketCRC(const CommandPacket *pPacket) const { return crc16((uint8_t *) pPacket, sizeof(CommandPacket) - sizeof(uint16_t)); }
+
+void RotorController::handleCommand(CommandPacket *pPacket, CommandPacket *pResponse) {
+    memset(pResponse, 0, sizeof(CommandPacket));
+    pResponse->header = packetHeader;
+    pResponse->command = cmdOkResponse;
+    debug("Command: ");
+    debug(pPacket->command);
+
+    switch (pPacket->command){
+        case cmdPing:
+            pResponse->command = cmdPong;
+            break;
+        case cmdReadAzEl:
+            pResponse->command = cmdReadAzElResponse;
+            pResponse->payload.readAzElResponse.az = this->az->getAngle();
+            pResponse->payload.readAzElResponse.el = this->el->getAngle();
+            break;
+        case cmdGoToAzEl:
+            this->az->moveTo(pPacket->payload.goToAzEl.az);
+            this->el->moveTo(pPacket->payload.goToAzEl.el);
+            break;
+        case cmdEmergencyStop:break;
+        case cmdReadDateTime:
+            pResponse->command = cmdReadDateTimeResponse;
+            pResponse->payload.readDateTimeResponse.timestamp = t.getDateTime().unixtime;
+            break;
+        case cmdSetDateTime:
+            t.setDateTime(pPacket->payload.setDateTime.timestamp);
+            break;
+        case cmdReadEEPROM:break;
+        case cmdWriteEEPROM:break;
+        case cmdSetAuxOutput:
+            HAL_GPIO_WritePin(aux_gpio, aux_pin, (GPIO_PinState) pPacket->payload.setAuxOutput.state);
+            break;
+        case cmdReadEEPROMResponse:
+        case cmdOkResponse:
+        case cmdErrorResponse:
+        case cmdReadDateTimeResponse:
+        case cmdReadAzElResponse:
+        case cmdPong:
+        case cmdLast:
+        default:
+            debug("Unknown");
+            pResponse->command = cmdErrorResponse;
+            break;
+    }
+
+    pResponse->crc = getPacketCRC(pResponse);
+}
+
+void RotorController::onUSARTTxComplete(UART_HandleTypeDef *huart) {
+    if (huart->Instance != this->comm_uart->Instance){
+        return;
+    }
+    HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_RESET);
 }
 

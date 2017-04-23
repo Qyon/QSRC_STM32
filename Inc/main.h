@@ -55,6 +55,8 @@
 #define az_dir_GPIO_Port GPIOB
 #define az_step_Pin GPIO_PIN_14
 #define az_step_GPIO_Port GPIOB
+#define RTS_Pin GPIO_PIN_12
+#define RTS_GPIO_Port GPIOA
 #define el_enable_Pin GPIO_PIN_5
 #define el_enable_GPIO_Port GPIOB
 #define el_dir_Pin GPIO_PIN_6

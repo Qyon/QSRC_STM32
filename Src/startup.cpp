@@ -14,7 +14,7 @@
 
 MotionController az(&htim2, az_enable_GPIO_Port, az_step_Pin, az_dir_Pin, az_enable_Pin, false, 0, 360);
 MotionController el(&htim3, el_enable_GPIO_Port, el_step_Pin, el_dir_Pin, el_enable_Pin, true, 0, 90);
-RotorController controller(&huart1, &huart1, &hspi1, az_encoder_cs_GPIO_Port, az_encoder_cs_Pin,
+RotorController controller(&huart1, &huart2, &hspi1, az_encoder_cs_GPIO_Port, az_encoder_cs_Pin,
                            el_encoder_cs_GPIO_Port, el_encoder_cs_Pin, &az, &el, aux_out_GPIO_Port, aux_out_Pin);
 /**
   * @brief  Period elapsed callback in non blocking mode
@@ -40,19 +40,35 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 {
     controller.onSPIRxComplete(hspi);
 }
+
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     controller.onSPIRxComplete(hspi);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    controller.onUSARTRxComplete(huart);
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+    controller.onUSARTTxComplete(huart);
+}
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+    controller.debug("E");
 }
 
 /*
 
  */
 void startup() {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+    controller.init();
     while (1){
         controller.loop();
     }
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 }

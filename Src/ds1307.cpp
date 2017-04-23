@@ -47,31 +47,23 @@ void DS1307::setDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour
     #if ARDUINO >= 100
     Wire.write(DS1307_REG_TIME);
     #else
-    i2c_write(DS1307_REG_TIME);
+    //i2c_write(DS1307_REG_TIME);
     #endif
-
-    #if ARDUINO >= 100
-    Wire.write(dec2bcd(second));
-        Wire.write(dec2bcd(minute));
-        Wire.write(dec2bcd(hour));
-        Wire.write(dec2bcd(dow(year, month, day)));
-        Wire.write(dec2bcd(day));
-        Wire.write(dec2bcd(month));
-        Wire.write(dec2bcd(year-2000));
-    #else
-    i2c_write(dec2bcd(second));
-    i2c_write(dec2bcd(minute));
-    i2c_write(dec2bcd(hour));
-    i2c_write(dec2bcd(dow(year, month, day)));
-    i2c_write(dec2bcd(day));
-    i2c_write(dec2bcd(month));
-    i2c_write(dec2bcd(year-2000));
-    #endif
-
+    uint8_t buffer[8] = {
+        DS1307_REG_TIME,
+        dec2bcd(second),
+        dec2bcd(minute),
+        dec2bcd(hour),
+        dec2bcd(dow(year, month, day)),
+        dec2bcd(day),
+        dec2bcd(month),
+        dec2bcd((uint8_t) (year - 2000)),
+    };
+    i2c_write(buffer, sizeof(buffer));
     #if ARDUINO >= 100
     Wire.write(DS1307_REG_TIME);
     #else
-    i2c_write(DS1307_REG_TIME);
+        //i2c_write(DS1307_REG_TIME);
     #endif
 
     //Wire.endTransmission();
@@ -142,7 +134,13 @@ void DS1307::setDateTime(const char* date, const char* time)
 
     switch (date[0])
     {
-        case 'J': month = (uint8_t) (date[1] == 'a' ? 1 : month = (uint8_t) (date[2] == 'n' ? 6 : 7)); break;
+        case 'J':
+            if (date[1] == 'a'){
+                month = 1;
+            } else {
+                month = (uint8_t) (date[2] == 'n' ? 6 : 7);
+            }
+            break;
         case 'F': month = 2; break;
         case 'A': month = date[2] == 'r' ? 4 : 8; break;
         case 'M': month = date[2] == 'r' ? 3 : 5; break;
@@ -150,6 +148,9 @@ void DS1307::setDateTime(const char* date, const char* time)
         case 'O': month = 10; break;
         case 'N': month = 11; break;
         case 'D': month = 12; break;
+        default:
+            month = 0;
+            break;
     }
 
     day = conv2d(date + 4);
@@ -160,10 +161,8 @@ void DS1307::setDateTime(const char* date, const char* time)
     setDateTime(year+2000, month, day, hour, minute, second);
 }
 
-char* DS1307::dateFormat(const char* dateFormat, RTCDateTime dt)
+char * DS1307::dateFormat(char *buffer, const char *dateFormat, RTCDateTime dt)
 {
-    char buffer[255];
-
     buffer[0] = 0;
 
     char helper[11];
@@ -290,17 +289,10 @@ char* DS1307::dateFormat(const char* dateFormat, RTCDateTime dt)
 
 RTCDateTime DS1307::getDateTime(void)
 {
-    uint8_t values[7];
+    uint8_t values[8];
 
-    ////Wire.beginTransmission(DS1307_ADDRESS);
-    #if ARDUINO >= 100
-    Wire.write(DS1307_REG_TIME);
-    #else
     i2c_write(DS1307_REG_TIME);
-    #endif
-    //Wire.endTransmission();
-
-    i2c_read((uint8_t *) values, 7);
+    i2c_read((uint8_t *) values, sizeof(values));
 
     for (int i = 6; i >= 0; i--)
     {
@@ -310,15 +302,13 @@ RTCDateTime DS1307::getDateTime(void)
         }
     }
 
-    //Wire.endTransmission();
-
-    t.year = values[0] + 2000;
-    t.month = values[1];
-    t.day = values[2];
+    t.year = (uint16_t) (values[6] + 2000);
+    t.month = values[5];
+    t.day = values[4];
     t.dayOfWeek = values[3];
-    t.hour = values[4];
-    t.minute = values[5];
-    t.second = values[6];
+    t.hour = values[2];
+    t.minute = values[1];
+    t.second = values[0];
     t.unixtime = unixtime();
 
     return t;
@@ -367,6 +357,8 @@ uint8_t DS1307::writeByte(uint8_t offset, uint8_t data)
     buff[0] = data;
 
     writePacket(offset, buff, 1);
+
+    return 1;
 }
 
 void DS1307::readPacket(uint8_t offset, uint8_t * buff, uint8_t size)
@@ -744,13 +736,14 @@ uint8_t DS1307::readRegister8(uint8_t reg)
 }
 
 void DS1307::i2c_write(uint8_t value) {
-    HAL_I2C_Master_Transmit(&hi2c1, DS1307_ADDRESS, &value, 1, 10);
+    while(HAL_OK != HAL_I2C_Master_Transmit(&hi2c1, DS1307_ADDRESS, &value, 1, 1000));
 }
 
 void DS1307::i2c_write(uint8_t *value, uint8_t size) {
-    HAL_I2C_Master_Transmit(&hi2c1, DS1307_ADDRESS, value, size, 10);
+    HAL_I2C_Master_Transmit(&hi2c1, DS1307_ADDRESS, value, size, 1000);
 }
 
 void DS1307::i2c_read(uint8_t *buffer, uint8_t size) {
-    HAL_I2C_Master_Receive(&hi2c1, DS1307_ADDRESS, buffer, size, 10);
+    while(hi2c1.State != HAL_I2C_STATE_READY);
+    HAL_I2C_Master_Receive(&hi2c1, DS1307_ADDRESS, buffer, size, 1000);
 }

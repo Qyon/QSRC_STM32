@@ -10,6 +10,10 @@
 #include "MotionController.h"
 #include <Rot2Prog.h>
 #include "ds1307.h"
+#include "protocol.h"
+extern "C" {
+    #include "crc.h"
+};
 
 class RotorController {
 private:
@@ -26,6 +30,12 @@ private:
 
     GPIO_TypeDef* aux_gpio;
     uint16_t aux_pin;
+
+    CommandPacket cmd_buffer;
+    CommandPacket cmd_to_process;
+
+    uint32_t serial_sync;
+
 
     bool debug_enabled = true;
 
@@ -45,9 +55,6 @@ private:
     void encoderStartSPITransfer();
     void encoderStartSPITransferRead();
 
-    void debug(const char *string);
-    void debug(const char *string, const size_t len);
-    void debug(const uint32_t value);
 
     void send_serial(UART_HandleTypeDef *uart_handle, const uint8_t *string, size_t len);
 
@@ -62,7 +69,9 @@ private:
     uint16_t getEncAz();
     uint16_t getEncEl();
 
+    bool validateCommandPacket(CommandPacket *pPacket);
 public:
+    uint8_t serial_sync_tmp;
     RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeDef *dbg_uart,
                         SPI_HandleTypeDef *encoder_spi, GPIO_TypeDef *encoder_az_gpio,
                         uint16_t encoder_az_pin, GPIO_TypeDef *encoder_el_gpio, uint16_t encoder_el_pin,
@@ -76,6 +85,21 @@ public:
 
 
     volatile uint32_t s;
+
+    void init();
+
+    void onUSARTRxComplete(UART_HandleTypeDef *huart);
+
+    void handleCommand(CommandPacket *pPacket, CommandPacket *pResponse);
+
+    uint16_t getPacketCRC(const CommandPacket *pPacket) const;
+
+    void onUSARTTxComplete(UART_HandleTypeDef *ptr);
+
+    void debug(const char *string);
+    void debug(const char *string, const size_t len);
+    void debug(const uint32_t value);
+
 };
 
 
