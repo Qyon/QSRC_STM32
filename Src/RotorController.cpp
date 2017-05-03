@@ -22,7 +22,7 @@ RotorController::RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeD
       encoder_el_pin(encoder_el_pin),
       az(az_mc),
       el(el_mc), aux_gpio(aux_gpio), aux_pin(aux_pin) {
-
+    cmd_ready = false;
 }
 
 void RotorController::encoderStartSPITransfer() {
@@ -70,21 +70,38 @@ void RotorController::encoderStartSPITransferRead() {
 
 void RotorController::loop() {
     static CommandPacket response;
-    if (this->cmd_to_process.header){
-        if (!validateCommandPacket(&this->cmd_to_process)){
-            debug("Invalid command");
-            debug((const char *) &this->cmd_to_process, sizeof(CommandPacket));
-            memset(&this->cmd_to_process, 0, sizeof(this->cmd_to_process));
-            serial_sync_tmp = 0;
-            serial_sync = 0;
-        } else {
-            handleCommand(&this->cmd_to_process, &response);
+    if (uart_has_data){
+        uart_has_data = 0;
+        onUARTData();
+        if (cmd_ready){
+            if (!validateCommandPacket((CommandPacket *) &this->cmd_to_process)){
+                //debug("B");
+                memset((void *)&this->cmd_to_process, 0, sizeof(this->cmd_to_process));
+                serial_sync_tmp = 0;
+                serial_sync = 0;
+            } else {
 
-            this->cmd_to_process.header = 0;
-            HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_SET);
-            HAL_UART_Transmit_IT(this->comm_uart, (uint8_t *) &response, sizeof(response));
+                handleCommand((CommandPacket *) &this->cmd_to_process, &response);
+                debug((const char *) &response, sizeof(CommandPacket));
+//                for (int i = 0; i < sizeof(response); ++i) {
+//                    ((uint8_t *)(&response))[i] = 0x10 + i;
+//                }
+//                ((uint8_t *)(&response))[sizeof(CommandPacket)-1] = 0xff;
+                this->cmd_to_process.header = 0;
+                HAL_Delay(1);
+                HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_SET);
+                HAL_Delay(1);
+                HAL_UART_Transmit(this->comm_uart, (uint8_t *) &response, sizeof(response), 1000);
+                HAL_Delay(1);
+                HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_RESET);
+            }
+            cmd_ready = false;
         }
+        while(HAL_OK != HAL_UART_Receive_IT(comm_uart, (uint8_t *) (&(cmd_buffer)), sizeof(cmd_buffer)));
+        HAL_GPIO_TogglePin(green_led_GPIO_Port, green_led_Pin);
+
     }
+    HAL_Delay(100);
 }
 
 void RotorController::debug(const char *string) {
@@ -187,7 +204,7 @@ void RotorController::init() {
         encoderStartSPITransfer();
     }
 
-    while(HAL_OK != HAL_UART_Receive_IT(this->comm_uart, (uint8_t *) &(this->serial_sync_tmp), sizeof(serial_sync_tmp)));
+    while(HAL_OK != HAL_UART_Receive_IT(comm_uart, (uint8_t *) (&(cmd_buffer)), sizeof(cmd_buffer)));
     debug("Start!");
 }
 
@@ -195,25 +212,16 @@ void RotorController::onUSARTRxComplete(UART_HandleTypeDef *huart) {
     if (huart->Instance != this->comm_uart->Instance){
         return;
     }
-    if (serial_sync != packetHeader){
-        serial_sync >>= 8;
-        serial_sync |= ((serial_sync_tmp << 24) & 0xff000000);
-        if (serial_sync == packetHeader){
-            debug("S");
+    uart_has_data = 1;
+}
 
-            this->cmd_buffer.header = serial_sync;
-            HAL_UART_Receive_IT(this->comm_uart, (uint8_t *) (&(this->cmd_buffer) + sizeof(this->cmd_buffer.header)), sizeof(this->cmd_buffer) - sizeof(this->cmd_buffer.header));
-        } else {
-            HAL_UART_Receive_IT(this->comm_uart, (uint8_t *) &(this->serial_sync_tmp), sizeof(serial_sync_tmp));
-        }
-    } else {
-        if (!this->cmd_to_process.header){
-            // copy only when previous command processed
-            memcpy(&(this->cmd_to_process), &(this->cmd_buffer), sizeof(this->cmd_buffer));
-        }
-        debug("C");
-        HAL_UART_Receive_IT(this->comm_uart, (uint8_t *) (&(this->cmd_buffer)), sizeof(this->cmd_buffer));
+void RotorController::onUARTData() {
+    if (!cmd_to_process.header){
+        // copy only when previous command processed
+        memcpy((void *)&(cmd_to_process), (void *)&(cmd_buffer), sizeof(cmd_buffer));
+        cmd_ready = true;
     }
+    debug("C");
 }
 
 bool RotorController::validateCommandPacket(CommandPacket *pPacket) {
@@ -230,8 +238,8 @@ void RotorController::handleCommand(CommandPacket *pPacket, CommandPacket *pResp
     memset(pResponse, 0, sizeof(CommandPacket));
     pResponse->header = packetHeader;
     pResponse->command = cmdOkResponse;
-    debug("Command: ");
-    debug(pPacket->command);
+//    debug("Command: ");
+//    debug(pPacket->command);
 
     switch (pPacket->command){
         case cmdPing:

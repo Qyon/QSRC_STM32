@@ -31,10 +31,12 @@ private:
     GPIO_TypeDef* aux_gpio;
     uint16_t aux_pin;
 
-    CommandPacket cmd_buffer;
-    CommandPacket cmd_to_process;
+    volatile CommandPacket cmd_buffer;
+    volatile CommandPacket cmd_to_process;
+    volatile bool cmd_ready;
 
-    uint32_t serial_sync;
+    volatile uint32_t serial_sync;
+    volatile uint8_t uart_has_data = 0;
 
 
     bool debug_enabled = true;
@@ -71,7 +73,7 @@ private:
 
     bool validateCommandPacket(CommandPacket *pPacket);
 public:
-    uint8_t serial_sync_tmp;
+    volatile uint8_t serial_sync_tmp;
     RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeDef *dbg_uart,
                         SPI_HandleTypeDef *encoder_spi, GPIO_TypeDef *encoder_az_gpio,
                         uint16_t encoder_az_pin, GPIO_TypeDef *encoder_el_gpio, uint16_t encoder_el_pin,
@@ -100,6 +102,7 @@ public:
     void debug(const char *string, const size_t len);
     void debug(const uint32_t value);
 
+    void onUARTData();
 };
 
 
