@@ -22,6 +22,9 @@ enum ProtocolCommand {
     cmdReadEEPROMResponse = 0x0b,
     cmdWriteEEPROM = 0x0c,
     cmdSetAuxOutput = 0x0d,
+    cmdReadEncoders = 0x0e,
+    cmdReadEncodersResponse = 0x0f,
+
     cmdOkResponse = 0xfd,
     cmdErrorResponse = 0xfe,
     cmdLast = 0xff
@@ -88,6 +91,14 @@ struct CommandPayloadErrorResponse {
     uint32_t code;
 };
 
+struct CommandReadEncoders {
+};
+
+struct CommandReadEncodersResponse {
+    uint16_t az;
+    uint16_t el;
+};
+
 union CommandPayload {
     CommandPayloadPing ping;
     CommandPayloadPong pong;
@@ -104,6 +115,8 @@ union CommandPayload {
     CommandPayloadSetAuxOutput setAuxOutput;
     CommandPayloadOkResponse okResponse;
     CommandPayloadErrorResponse errorResponse;
+    CommandReadEncoders readEncoders;
+    CommandReadEncodersResponse readEncodersResponse;
 };
 
 /**

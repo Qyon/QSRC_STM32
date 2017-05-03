@@ -267,6 +267,11 @@ void RotorController::handleCommand(CommandPacket *pPacket, CommandPacket *pResp
         case cmdSetAuxOutput:
             HAL_GPIO_WritePin(aux_gpio, aux_pin, (GPIO_PinState) pPacket->payload.setAuxOutput.state);
             break;
+        case cmdReadEncoders:
+            pResponse->command = cmdReadEncodersResponse;
+            pResponse->payload.readEncodersResponse.az = this->raw_encoder_az;
+            pResponse->payload.readEncodersResponse.el = this->raw_encoder_el;
+            break;
         case cmdReadEEPROMResponse:
         case cmdOkResponse:
         case cmdErrorResponse:
