@@ -24,6 +24,7 @@ enum ProtocolCommand {
     cmdSetAuxOutput = 0x0d,
     cmdReadEncoders = 0x0e,
     cmdReadEncodersResponse = 0x0f,
+    cmdSetAzEl = 0x10,
 
     cmdOkResponse = 0xfd,
     cmdErrorResponse = 0xfe,
@@ -47,6 +48,11 @@ struct CommandPayloadReadAzElResponse {
 };
 
 struct CommandPayloadGoToAzEl {
+    float az;
+    float el;
+};
+
+struct CommandPayloadSetAzEl {
     float az;
     float el;
 };
@@ -117,6 +123,7 @@ union CommandPayload {
     CommandPayloadErrorResponse errorResponse;
     CommandReadEncoders readEncoders;
     CommandReadEncodersResponse readEncodersResponse;
+    CommandPayloadSetAzEl setAzEl;
 };
 
 /**

@@ -91,7 +91,7 @@ void RotorController::loop() {
                 HAL_Delay(1);
                 HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_SET);
                 HAL_Delay(1);
-                HAL_UART_Transmit(this->comm_uart, (uint8_t *) &response, sizeof(response), 1000);
+                HAL_UART_Transmit(this->comm_uart, (uint8_t *) &response, sizeof(response), 200);
                 HAL_Delay(1);
                 HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_RESET);
             }
@@ -99,9 +99,7 @@ void RotorController::loop() {
         }
         while(HAL_OK != HAL_UART_Receive_IT(comm_uart, (uint8_t *) (&(cmd_buffer)), sizeof(cmd_buffer)));
         HAL_GPIO_TogglePin(green_led_GPIO_Port, green_led_Pin);
-
     }
-    HAL_Delay(100);
 }
 
 void RotorController::debug(const char *string) {
@@ -272,6 +270,11 @@ void RotorController::handleCommand(CommandPacket *pPacket, CommandPacket *pResp
             pResponse->payload.readEncodersResponse.az = this->raw_encoder_az;
             pResponse->payload.readEncodersResponse.el = this->raw_encoder_el;
             break;
+        case cmdSetAzEl:
+            this->az->set(pPacket->payload.setAzEl.az);
+            this->el->set(pPacket->payload.setAzEl.el);
+            break;
+
         case cmdReadEEPROMResponse:
         case cmdOkResponse:
         case cmdErrorResponse:

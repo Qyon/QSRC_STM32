@@ -124,3 +124,10 @@ float MotionController::getAngle() {
 float MotionController::stepsToDegrees(int32_t steps) {
     return   (360.0f * steps / STEPS_PER_ROTATION);
 }
+
+void MotionController::set(float value) {
+    uint32_t steps = degreesToSteps(value);
+    while(running);
+    position_destination = steps;
+    position_current = steps;
+}

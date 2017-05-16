@@ -51,6 +51,8 @@ public:
     float stepsToDegrees(int32_t steps);
 
     void moveTo(uint32_t target_step);
+
+    void set(float value);
 };
 
 
