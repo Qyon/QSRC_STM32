@@ -1,7 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : main.hpp
-  * Description        : This file contains the common defines of the application
+  * File Name          : RTC.c
+  * Description        : This file provides code for the configuration
+  *                      of the RTC instances.
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -35,73 +36,77 @@
   *
   ******************************************************************************
   */
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
-  /* Includes ------------------------------------------------------------------*/
 
 /* Includes ------------------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+#include "rtc.h"
 
-/* USER CODE END Includes */
+/* USER CODE BEGIN 0 */
 
-/* Private define ------------------------------------------------------------*/
+/* USER CODE END 0 */
 
-#define green_led_Pin GPIO_PIN_13
-#define green_led_GPIO_Port GPIOC
-#define red_led_Pin GPIO_PIN_14
-#define red_led_GPIO_Port GPIOC
-#define yellow_led_Pin GPIO_PIN_15
-#define yellow_led_GPIO_Port GPIOC
-#define aux_out_Pin GPIO_PIN_1
-#define aux_out_GPIO_Port GPIOA
-#define az_encoder_cs_Pin GPIO_PIN_0
-#define az_encoder_cs_GPIO_Port GPIOB
-#define el_encoder_cs_Pin GPIO_PIN_1
-#define el_encoder_cs_GPIO_Port GPIOB
-#define az_enable_Pin GPIO_PIN_12
-#define az_enable_GPIO_Port GPIOB
-#define az_dir_Pin GPIO_PIN_13
-#define az_dir_GPIO_Port GPIOB
-#define az_step_Pin GPIO_PIN_14
-#define az_step_GPIO_Port GPIOB
-#define RTS_Pin GPIO_PIN_12
-#define RTS_GPIO_Port GPIOA
-#define el_enable_Pin GPIO_PIN_5
-#define el_enable_GPIO_Port GPIOB
-#define el_dir_Pin GPIO_PIN_6
-#define el_dir_GPIO_Port GPIOB
-#define el_step_Pin GPIO_PIN_7
-#define el_step_GPIO_Port GPIOB
+RTC_HandleTypeDef hrtc;
 
-/* ########################## Assert Selection ############################## */
-/**
-  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
-  *        HAL drivers code
-  */
-/* #define USE_FULL_ASSERT    1U */
+/* RTC init function */
+void MX_RTC_Init(void)
+{
 
-/* USER CODE BEGIN Private defines */
+    /**Initialize RTC Only 
+    */
+  hrtc.Instance = RTC;
+  hrtc.Init.AsynchPrediv = RTC_AUTO_1_SECOND;
+  hrtc.Init.OutPut = RTC_OUTPUTSOURCE_ALARM;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
 
-/* USER CODE END Private defines */
-
-#ifdef __cplusplus
- extern "C" {
-#endif
-void _Error_Handler(char *, int);
-
-#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
-#ifdef __cplusplus
 }
-#endif
+
+void HAL_RTC_MspInit(RTC_HandleTypeDef* rtcHandle)
+{
+
+  if(rtcHandle->Instance==RTC)
+  {
+  /* USER CODE BEGIN RTC_MspInit 0 */
+
+  /* USER CODE END RTC_MspInit 0 */
+    HAL_PWR_EnableBkUpAccess();
+    /* Enable BKP CLK enable for backup registers */
+    __HAL_RCC_BKP_CLK_ENABLE();
+    /* RTC clock enable */
+    __HAL_RCC_RTC_ENABLE();
+  /* USER CODE BEGIN RTC_MspInit 1 */
+
+  /* USER CODE END RTC_MspInit 1 */
+  }
+}
+
+void HAL_RTC_MspDeInit(RTC_HandleTypeDef* rtcHandle)
+{
+
+  if(rtcHandle->Instance==RTC)
+  {
+  /* USER CODE BEGIN RTC_MspDeInit 0 */
+
+  /* USER CODE END RTC_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_RTC_DISABLE();
+  /* USER CODE BEGIN RTC_MspDeInit 1 */
+
+  /* USER CODE END RTC_MspDeInit 1 */
+  }
+} 
+
+/* USER CODE BEGIN 1 */
+
+/* USER CODE END 1 */
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-*/ 
+  */
 
-#endif /* __MAIN_H */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

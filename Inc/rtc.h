@@ -1,7 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : main.hpp
-  * Description        : This file contains the common defines of the application
+  * File Name          : RTC.h
+  * Description        : This file provides code for the configuration
+  *                      of the RTC instances.
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -36,72 +37,45 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
-  /* Includes ------------------------------------------------------------------*/
+#ifndef __rtc_H
+#define __rtc_H
+#ifdef __cplusplus
+ extern "C" {
+#endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f1xx_hal.h"
+#include "main.h"
+
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
-/* Private define ------------------------------------------------------------*/
-
-#define green_led_Pin GPIO_PIN_13
-#define green_led_GPIO_Port GPIOC
-#define red_led_Pin GPIO_PIN_14
-#define red_led_GPIO_Port GPIOC
-#define yellow_led_Pin GPIO_PIN_15
-#define yellow_led_GPIO_Port GPIOC
-#define aux_out_Pin GPIO_PIN_1
-#define aux_out_GPIO_Port GPIOA
-#define az_encoder_cs_Pin GPIO_PIN_0
-#define az_encoder_cs_GPIO_Port GPIOB
-#define el_encoder_cs_Pin GPIO_PIN_1
-#define el_encoder_cs_GPIO_Port GPIOB
-#define az_enable_Pin GPIO_PIN_12
-#define az_enable_GPIO_Port GPIOB
-#define az_dir_Pin GPIO_PIN_13
-#define az_dir_GPIO_Port GPIOB
-#define az_step_Pin GPIO_PIN_14
-#define az_step_GPIO_Port GPIOB
-#define RTS_Pin GPIO_PIN_12
-#define RTS_GPIO_Port GPIOA
-#define el_enable_Pin GPIO_PIN_5
-#define el_enable_GPIO_Port GPIOB
-#define el_dir_Pin GPIO_PIN_6
-#define el_dir_GPIO_Port GPIOB
-#define el_step_Pin GPIO_PIN_7
-#define el_step_GPIO_Port GPIOB
-
-/* ########################## Assert Selection ############################## */
-/**
-  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
-  *        HAL drivers code
-  */
-/* #define USE_FULL_ASSERT    1U */
+extern RTC_HandleTypeDef hrtc;
 
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-void _Error_Handler(char *, int);
+extern void _Error_Handler(char *, int);
 
-#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
+void MX_RTC_Init(void);
+
+/* USER CODE BEGIN Prototypes */
+
+/* USER CODE END Prototypes */
+
 #ifdef __cplusplus
 }
 #endif
+#endif /*__ rtc_H */
 
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-*/ 
+  */
 
-#endif /* __MAIN_H */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -100,7 +100,9 @@ void RotorController::loop() {
      */
     if (HAL_GetTick() - last_valid_uart_rcv > MAX_TIME_WITHOUT_VALID_RX){
         this->emergency_stop();
+        HAL_GPIO_WritePin(green_led_GPIO_Port, green_led_Pin, GPIO_PIN_SET);
     } else {
+        HAL_GPIO_WritePin(green_led_GPIO_Port, green_led_Pin, GPIO_PIN_RESET);
         this->emergency_stopped = false;
     }
 }
@@ -131,7 +133,7 @@ void RotorController::send_serial(UART_HandleTypeDef *uart_handle, const uint8_t
     if (uart_handle->Instance == dbg_uart->Instance){
         buffer = serial_buffer_debug;
     }
-    while((uart_handle->State == HAL_UART_STATE_BUSY_TX || uart_handle->State == HAL_UART_STATE_BUSY_TX_RX));
+    while((uart_handle->gState == HAL_UART_STATE_BUSY_TX || uart_handle->gState == HAL_UART_STATE_BUSY_TX_RX));
     memset(buffer, 0, len);
     memcpy(buffer, string, len);
     while(HAL_UART_Transmit_DMA(uart_handle, (uint8_t *) buffer, (uint16_t) len) != HAL_OK);
