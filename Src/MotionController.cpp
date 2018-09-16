@@ -133,6 +133,6 @@ void MotionController::set(float value) {
 }
 
 void MotionController::emergency_stop() {
-    this->position_current = this->position_destination;
+    this->position_destination = this->position_current;
     this->speed_current = 0;
 }
