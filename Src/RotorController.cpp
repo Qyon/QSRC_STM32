@@ -70,30 +70,23 @@ void RotorController::encoderStartSPITransferRead() {
 void RotorController::loop() {
     static CommandPacket response;
     static uint32_t last_valid_uart_rcv = HAL_GetTick();
-    if (uart_has_data){
+    if (uart_has_data != 0){
         uart_has_data = 0;
 
-        if (onUARTData()){
-            if (!validateCommandPacket((CommandPacket *) &this->cmd_to_process)){
-                //debug("B");
-                memset((void *)&this->cmd_to_process, 0, sizeof(this->cmd_to_process));
-                serial_sync_tmp = 0;
-                serial_sync = 0;
-            } else {
-                last_valid_uart_rcv = HAL_GetTick();
-                HAL_GPIO_TogglePin(green_led_GPIO_Port, green_led_Pin);
-                handleCommand((CommandPacket *) &this->cmd_to_process, &response);
-                debug((const char *) &response, sizeof(CommandPacket));
-                this->cmd_to_process.header = 0;
-                HAL_Delay(1);
-                HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_SET);
-                HAL_Delay(1);
-                HAL_UART_Transmit(this->comm_uart, (uint8_t *) &response, sizeof(response), 200);
-                HAL_Delay(1);
-                HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_RESET);
-            }
-        }
-        while(HAL_OK != HAL_UART_Receive_IT(comm_uart, (uint8_t *) (&(cmd_buffer)), sizeof(cmd_buffer)));
+        last_valid_uart_rcv = HAL_GetTick();
+        handleCommand((CommandPacket *) &this->cmd_to_process, &response);
+        debug((const char *) &response, sizeof(CommandPacket));
+        this->cmd_to_process.header = 0;
+        uart_rx_mode = 0;
+        HAL_Delay(1);
+        HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_SET);
+        HAL_Delay(1);
+        HAL_UART_Transmit(this->comm_uart, (uint8_t *) &response, sizeof(response), 200);
+        HAL_Delay(1);
+        HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_RESET);
+    }
+    if (uart_rx_mode == 0u){
+        startUartRx();
     }
     /*
      * If no valid data from controller recived in given amount of time proceed to emergency stop
@@ -105,6 +98,23 @@ void RotorController::loop() {
         HAL_GPIO_WritePin(green_led_GPIO_Port, green_led_Pin, GPIO_PIN_RESET);
         this->emergency_stopped = false;
     }
+
+    if (this->az->isRunning() || this->el->isRunning()){
+        HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_SET);
+    } else {
+        HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_RESET);
+    }
+}
+
+void RotorController::startUartRx() {
+    static uint32_t uart_timeout = HAL_GetTick();
+    while(HAL_OK != HAL_UART_Receive_IT(comm_uart, const_cast<uint8_t *>(&cmd_in), 1)){
+        if (HAL_GetTick() - uart_timeout > 1000){
+            uart_rx_mode = 0;
+            return;
+        }
+    }
+    uart_rx_mode = 1;
 }
 
 void RotorController::debug(const char *string) {
@@ -207,7 +217,7 @@ void RotorController::init() {
         encoderStartSPITransfer();
     }
 
-    while(HAL_OK != HAL_UART_Receive_IT(comm_uart, (uint8_t *) (&(cmd_buffer)), sizeof(cmd_buffer)));
+    startUartRx();
     debug("Start!");
 }
 
@@ -215,19 +225,29 @@ void RotorController::onUSARTRxComplete(UART_HandleTypeDef *huart) {
     if (huart->Instance != this->comm_uart->Instance){
         return;
     }
-    uart_has_data = 1;
-}
-
-bool RotorController::onUARTData() {
-    bool cmd_ready = false;
-    if (!cmd_to_process.header){
-        // copy only when previous command processed
-        memcpy((void *)&(cmd_to_process), (void *)&(cmd_buffer), sizeof(cmd_buffer));
-        cmd_ready = true;
+    cmd_buffer[cmd_buffer_index] = cmd_in;
+    if (this->validateCommandPacket((CommandPacket *) &cmd_buffer)){
+        memcpy((void *)&(cmd_to_process), (const void *) &cmd_buffer, sizeof(cmd_to_process));
+        memset((void *)&this->cmd_buffer, 0, sizeof(this->cmd_buffer));
+        uart_has_data = 1;
+        cmd_buffer_index = 0;
+    } else {
+        cmd_buffer_index++;
+        if (cmd_buffer_index >= sizeof(this->cmd_buffer)){
+            cmd_buffer_index = sizeof(this->cmd_buffer) - 1;
+            for (uint8_t i = 0; i < sizeof(this->cmd_buffer) - 1; ++i) {
+                this->cmd_buffer[i] = this->cmd_buffer[i+1];
+            }
+        }
+        if (this->validateCommandPacket((CommandPacket *) &cmd_buffer)){
+            memcpy((void *)&(cmd_to_process), (const void *) &cmd_buffer, sizeof(cmd_to_process));
+            memset((void *)&this->cmd_buffer, 0, sizeof(this->cmd_buffer));
+            uart_has_data = 1;
+            cmd_buffer_index = 0;
+        } else {
+            HAL_UART_Receive_IT(this->comm_uart, const_cast<uint8_t *>(&cmd_in), 1);
+        }
     }
-    debug("C");
-
-    return cmd_ready;
 }
 
 bool RotorController::validateCommandPacket(CommandPacket *pPacket) {
@@ -306,6 +326,14 @@ void RotorController::onUSARTTxComplete(UART_HandleTypeDef *huart) {
         return;
     }
     HAL_GPIO_WritePin(RTS_GPIO_Port, RTS_Pin, GPIO_PIN_RESET);
+}
+
+void RotorController::onUSARTError(UART_HandleTypeDef *huart) {
+    if (huart->ErrorCode == HAL_UART_ERROR_FE && cmd_to_process.header){
+        // ignore standard error
+    } else {
+        //this->onTxError(0);
+    }
 }
 
 void RotorController::emergency_stop() {

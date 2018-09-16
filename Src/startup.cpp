@@ -57,7 +57,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-    controller.onUSARTRxComplete(huart);
+    controller.onUSARTError(huart);
 }
 
 /*

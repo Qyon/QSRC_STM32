@@ -17,7 +17,7 @@ extern "C" {
 
 class RotorController {
 private:
-    const uint16_t MAX_TIME_WITHOUT_VALID_RX = 2000;
+    const uint16_t MAX_TIME_WITHOUT_VALID_RX = 1000;
     UART_HandleTypeDef *comm_uart;
     UART_HandleTypeDef *dbg_uart;
     SPI_HandleTypeDef *encoder_spi;
@@ -32,11 +32,14 @@ private:
     GPIO_TypeDef* aux_gpio;
     uint16_t aux_pin;
 
-    volatile CommandPacket cmd_buffer;
+    volatile uint8_t cmd_in;
+    volatile uint8_t cmd_buffer[sizeof(CommandPacket) + 2];
+    volatile uint8_t cmd_buffer_index = 0;
+
     volatile CommandPacket cmd_to_process;
 
-    volatile uint32_t serial_sync;
     volatile uint8_t uart_has_data = 0;
+    volatile uint8_t uart_rx_mode = 0;
 
 
     bool debug_enabled = false;
@@ -99,12 +102,13 @@ public:
     uint16_t getPacketCRC(const CommandPacket *pPacket) const;
 
     void onUSARTTxComplete(UART_HandleTypeDef *ptr);
+    void onUSARTError(UART_HandleTypeDef *huart);
 
     void debug(const char *string);
     void debug(const char *string, const size_t len);
     void debug(const uint32_t value);
 
-    bool onUARTData();
+    void startUartRx();
 };
 
 
