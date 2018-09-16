@@ -47,10 +47,10 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define green_led_Pin GPIO_PIN_13
-#define green_led_GPIO_Port GPIOC
-#define red_led_Pin GPIO_PIN_14
+#define red_led_Pin GPIO_PIN_13
 #define red_led_GPIO_Port GPIOC
+#define green_led_Pin GPIO_PIN_14
+#define green_led_GPIO_Port GPIOC
 #define yellow_led_Pin GPIO_PIN_15
 #define yellow_led_GPIO_Port GPIOC
 #define aux_out_Pin GPIO_PIN_1
