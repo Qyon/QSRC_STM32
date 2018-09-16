@@ -17,6 +17,7 @@ extern "C" {
 
 class RotorController {
 private:
+    const uint16_t MAX_TIME_WITHOUT_VALID_RX = 2000;
     UART_HandleTypeDef *comm_uart;
     UART_HandleTypeDef *dbg_uart;
     SPI_HandleTypeDef *encoder_spi;
@@ -33,13 +34,12 @@ private:
 
     volatile CommandPacket cmd_buffer;
     volatile CommandPacket cmd_to_process;
-    volatile bool cmd_ready;
 
     volatile uint32_t serial_sync;
     volatile uint8_t uart_has_data = 0;
 
 
-    bool debug_enabled = true;
+    bool debug_enabled = false;
 
     const uint16_t encoder_read_angle_command = 0xffff;
     volatile uint16_t raw_encoder_az;
@@ -48,6 +48,7 @@ private:
     volatile uint16_t * raw_encoder_current = nullptr;
     bool encoder_spi_read = false;
     volatile bool encoder_spi_in_progress = false;
+    bool emergency_stopped = false;
 
     uint8_t serial_buffer[256];
     uint8_t serial_buffer_debug[256];
@@ -72,6 +73,7 @@ private:
     uint16_t getEncEl();
 
     bool validateCommandPacket(CommandPacket *pPacket);
+    void emergency_stop();
 public:
     volatile uint8_t serial_sync_tmp;
     RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeDef *dbg_uart,
@@ -102,7 +104,7 @@ public:
     void debug(const char *string, const size_t len);
     void debug(const uint32_t value);
 
-    void onUARTData();
+    bool onUARTData();
 };
 
 

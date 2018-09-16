@@ -53,6 +53,8 @@ public:
     void moveTo(uint32_t target_step);
 
     void set(float value);
+
+    void emergency_stop();
 };
 
 

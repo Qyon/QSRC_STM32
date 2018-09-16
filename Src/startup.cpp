@@ -67,7 +67,7 @@ void startup() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-noreturn"
     controller.init();
-    while (1){
+    while (true){
         controller.loop();
     }
 #pragma GCC diagnostic pop
