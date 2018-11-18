@@ -52,7 +52,8 @@ void MotionController::onTimer() {
             HAL_GPIO_WritePin(gpio, dir_pin, reverse_direction ? GPIO_PIN_RESET : GPIO_PIN_SET);
         }
 
-        uint16_t time = (uint16_t) ((1.0f / fabsf(speed_current)) * 40000);
+        //uint16_t time = (uint16_t) ((1.0f / fabsf(speed_current)) * 40000);
+        int16_t time = (int16_t) ((8000000.0f / fabsf(speed_current)));
         if (time > 16000){
             time = 16000;
         } else  if (time < 1){
