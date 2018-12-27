@@ -80,7 +80,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, az_encoder_cs_Pin|el_encoder_cs_Pin|az_enable_Pin|el_enable_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, az_dir_Pin|az_step_Pin|el_dir_Pin|el_step_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, SPI2_SS1_Pin|SPI2_SS2_Pin|el_dir_Pin|el_step_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PCPin PCPin PCPin */
   GPIO_InitStruct.Pin = red_led_Pin|green_led_Pin|yellow_led_Pin;
@@ -100,16 +100,23 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(aux_out_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin 
-                           PBPin PBPin PBPin PBPin */
-  GPIO_InitStruct.Pin = az_encoder_cs_Pin|el_encoder_cs_Pin|az_enable_Pin|az_dir_Pin 
-                          |az_step_Pin|el_enable_Pin|el_dir_Pin|el_step_Pin;
+                           PBPin PBPin */
+  GPIO_InitStruct.Pin = az_encoder_cs_Pin|el_encoder_cs_Pin|az_enable_Pin|el_enable_Pin 
+                          |el_dir_Pin|el_step_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB2 PB10 PB11 PB15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_15;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = UNUSED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(UNUSED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PBPin PBPin */
+  GPIO_InitStruct.Pin = SPI2_SS1_Pin|SPI2_SS2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */

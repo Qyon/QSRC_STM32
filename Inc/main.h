@@ -59,6 +59,12 @@
 #define az_encoder_cs_GPIO_Port GPIOB
 #define el_encoder_cs_Pin GPIO_PIN_1
 #define el_encoder_cs_GPIO_Port GPIOB
+#define UNUSED_Pin GPIO_PIN_2
+#define UNUSED_GPIO_Port GPIOB
+#define SPI2_SS1_Pin GPIO_PIN_10
+#define SPI2_SS1_GPIO_Port GPIOB
+#define SPI2_SS2_Pin GPIO_PIN_11
+#define SPI2_SS2_GPIO_Port GPIOB
 #define az_enable_Pin GPIO_PIN_12
 #define az_enable_GPIO_Port GPIOB
 #define az_dir_Pin GPIO_PIN_13
