@@ -216,6 +216,8 @@ void RotorController::init() {
         encoder_spi_in_progress = true;
         encoderStartSPITransfer();
     }
+    az->init();
+    el->init();
 
     startUartRx();
     debug("Start!");
@@ -340,5 +342,13 @@ void RotorController::emergency_stop() {
     this->az->emergency_stop();
     this->el->emergency_stop();
     this->emergency_stopped = true;
+}
+
+void RotorController::writeTMCSPI(uint8 channel, uint8 *data, size_t length) {
+    if (channel == 0){
+        az->writeTMCSPI(data, length);
+    } else {
+        el->writeTMCSPI(data, length);
+    }
 }
 

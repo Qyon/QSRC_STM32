@@ -109,6 +109,8 @@ public:
     void debug(const uint32_t value);
 
     void startUartRx();
+
+    void writeTMCSPI(uint8 channel, uint8 *data, size_t length);
 };
 
 
