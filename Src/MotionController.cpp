@@ -16,7 +16,7 @@ void MotionController::onTimer() {
         int32_t distance = position_destination - position_current;
         float speed_m;
         if (distance != 0){
-            speed_m = acc_max * sqrtf((2.0f*fabsf(distance)) / acc_max);
+            speed_m = acc_max * sqrtf((2.0f*abs(distance)) / acc_max);
         } else {
             speed_m = 0;
         }
@@ -54,7 +54,6 @@ void MotionController::onTimer() {
             HAL_GPIO_WritePin(dir_gpio, dir_pin, reverse_direction ? GPIO_PIN_RESET : GPIO_PIN_SET);
         }
 
-        //uint16_t time = (uint16_t) ((1.0f / fabsf(speed_current)) * 40000);
         auto time = (uint32_t) ((8000000.0f / fabsf(speed_current)));
         if (time > 1600000){
             time = 1600000;
