@@ -55,9 +55,9 @@ void MotionController::onTimer() {
         }
 
         //uint16_t time = (uint16_t) ((1.0f / fabsf(speed_current)) * 40000);
-        int16_t time = (int16_t) ((8000000.0f / fabsf(speed_current)));
-        if (time > 16000){
-            time = 16000;
+        uint32_t time = (uint32_t) ((8000000.0f / fabsf(speed_current)));
+        if (time > 1600000){
+            time = 1600000;
         } else  if (time < 1){
             time = 1;
         }
