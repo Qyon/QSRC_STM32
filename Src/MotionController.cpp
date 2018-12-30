@@ -151,7 +151,7 @@ void MotionController::init() {
         tmc2160_reset(&tmc2160);
         tmc2160.registerResetState[TMC2160_CHOPCONF] = FIELD_SET(tmc2160.registerResetState[TMC2160_CHOPCONF], TMC2160_INTPOL_MASK, TMC2160_INTPOL_SHIFT, 1);
         tmc2160.registerResetState[TMC2160_CHOPCONF] = FIELD_SET(tmc2160.registerResetState[TMC2160_CHOPCONF], TMC2160_MRES_MASK, TMC2160_MRES_SHIFT, 0b0011);
-        tmc2160.registerResetState[TMC2160_IHOLD_IRUN] = FIELD_SET(tmc2160.registerResetState[TMC2160_IHOLD_IRUN], TMC2160_IRUN_MASK, TMC2160_IRUN_SHIFT, 22);
+        tmc2160.registerResetState[TMC2160_IHOLD_IRUN] = FIELD_SET(tmc2160.registerResetState[TMC2160_IHOLD_IRUN], TMC2160_IRUN_MASK, TMC2160_IRUN_SHIFT, 16);
         tmc2160.registerResetState[TMC2160_IHOLD_IRUN] = FIELD_SET(tmc2160.registerResetState[TMC2160_IHOLD_IRUN], TMC2160_IHOLD_MASK, TMC2160_IHOLD_SHIFT, 4);
         tmc2160.registerResetState[TMC2160_GCONF] = FIELD_SET(tmc2160.registerResetState[TMC2160_GCONF], TMC2160_EN_PWM_MODE_MASK, TMC2160_EN_PWM_MODE_SHIFT, 1);
         while (tmc2160.config->state != CONFIG_READY) {

@@ -71,10 +71,10 @@
 #define SPI2_SCK_GPIO_Port GPIOB
 #define SPI2_MISO_Pin GPIO_PIN_14
 #define SPI2_MISO_GPIO_Port GPIOB
-#define az_dir_Pin GPIO_PIN_8
-#define az_dir_GPIO_Port GPIOA
-#define az_step_Pin GPIO_PIN_11
+#define az_step_Pin GPIO_PIN_8
 #define az_step_GPIO_Port GPIOA
+#define az_dir_Pin GPIO_PIN_11
+#define az_dir_GPIO_Port GPIOA
 #define RTS_Pin GPIO_PIN_12
 #define RTS_GPIO_Port GPIOA
 #define el_enable_Pin GPIO_PIN_5
