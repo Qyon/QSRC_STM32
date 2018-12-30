@@ -12,7 +12,7 @@
 
 void MotionController::onTimer() {
     if (position_current != position_destination || (speed_current != 0.0f)){
-        HAL_GPIO_TogglePin(gpio, step_pin);
+        HAL_GPIO_TogglePin(step_gpio, step_pin);
         int32_t distance = position_destination - position_current;
         float speed_m;
         if (distance != 0){
@@ -47,11 +47,11 @@ void MotionController::onTimer() {
 
         if (speed_current > 0){
             position_current ++;
-            HAL_GPIO_WritePin(gpio, dir_pin, reverse_direction ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(dir_gpio, dir_pin, reverse_direction ? GPIO_PIN_SET : GPIO_PIN_RESET);
         }
         if (speed_current < 0){
             position_current --;
-            HAL_GPIO_WritePin(gpio, dir_pin, reverse_direction ? GPIO_PIN_RESET : GPIO_PIN_SET);
+            HAL_GPIO_WritePin(dir_gpio, dir_pin, reverse_direction ? GPIO_PIN_RESET : GPIO_PIN_SET);
         }
 
         //uint16_t time = (uint16_t) ((1.0f / fabsf(speed_current)) * 40000);
@@ -64,7 +64,7 @@ void MotionController::onTimer() {
         __HAL_TIM_SET_AUTORELOAD(htim, time);
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
-        HAL_GPIO_TogglePin(gpio, step_pin);
+        HAL_GPIO_TogglePin(step_gpio, step_pin);
     } else {
         //HAL_GPIO_WritePin(gpio, enable_pin, GPIO_PIN_SET);
         HAL_TIM_Base_Stop_IT(htim);
@@ -73,12 +73,14 @@ void MotionController::onTimer() {
     }
 }
 
-MotionController::MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, uint16_t step_pin, uint16_t dir_pin,
+MotionController::MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *step_gpio, uint16_t step_pin,
+                                   GPIO_TypeDef *dir_gpio, uint16_t dir_pin, GPIO_TypeDef *enable_gpio,
                                    uint16_t enable_pin, bool reverse_direction, uint16_t angle_minimum,
                                    uint16_t angle_maximum, SPI_HandleTypeDef *tmc2160_spi,
                                    GPIO_TypeDef *tmc2160_gpio, uint16_t tmc2160_pin, uint8 channel)
-    : gpio(gpio), step_pin(step_pin), dir_pin(dir_pin),
-      enable_pin(enable_pin), htim(htim),
+    : step_gpio(step_gpio), step_pin(step_pin),
+      dir_gpio(dir_gpio), dir_pin(dir_pin),
+      enable_gpio(enable_gpio), enable_pin(enable_pin), htim(htim),
       reverse_direction(reverse_direction),
       angle_minimum(angle_minimum),
       angle_maximum(angle_maximum), tmc2160_spi(tmc2160_spi), tmc2160_gpio(tmc2160_gpio), tmc2160_pin(tmc2160_pin) {
@@ -107,7 +109,7 @@ void MotionController::moveTo(float angle) {
 void MotionController::moveTo(uint32_t target_step) {
     position_destination = target_step;
     if (running == 0u){
-        HAL_GPIO_WritePin(gpio, enable_pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(enable_gpio, enable_pin, GPIO_PIN_RESET);
         running = 1;
         __HAL_TIM_SET_AUTORELOAD(htim, 1);
         HAL_TIM_Base_Start_IT(htim);
@@ -149,7 +151,7 @@ void MotionController::init() {
         tmc2160_reset(&tmc2160);
         tmc2160.registerResetState[TMC2160_CHOPCONF] = FIELD_SET(tmc2160.registerResetState[TMC2160_CHOPCONF], TMC2160_INTPOL_MASK, TMC2160_INTPOL_SHIFT, 1);
         tmc2160.registerResetState[TMC2160_CHOPCONF] = FIELD_SET(tmc2160.registerResetState[TMC2160_CHOPCONF], TMC2160_MRES_MASK, TMC2160_MRES_SHIFT, 0b0011);
-        tmc2160.registerResetState[TMC2160_IHOLD_IRUN] = FIELD_SET(tmc2160.registerResetState[TMC2160_IHOLD_IRUN], TMC2160_IRUN_MASK, TMC2160_IRUN_SHIFT, 25);
+        tmc2160.registerResetState[TMC2160_IHOLD_IRUN] = FIELD_SET(tmc2160.registerResetState[TMC2160_IHOLD_IRUN], TMC2160_IRUN_MASK, TMC2160_IRUN_SHIFT, 22);
         tmc2160.registerResetState[TMC2160_IHOLD_IRUN] = FIELD_SET(tmc2160.registerResetState[TMC2160_IHOLD_IRUN], TMC2160_IHOLD_MASK, TMC2160_IHOLD_SHIFT, 4);
         tmc2160.registerResetState[TMC2160_GCONF] = FIELD_SET(tmc2160.registerResetState[TMC2160_GCONF], TMC2160_EN_PWM_MODE_MASK, TMC2160_EN_PWM_MODE_SHIFT, 1);
         while (tmc2160.config->state != CONFIG_READY) {
@@ -159,9 +161,9 @@ void MotionController::init() {
 }
 
 void MotionController::writeTMCSPI(uint8 *data, size_t length) {
-    if (tmc2160_spi){
+    if (tmc2160_spi != nullptr){
         HAL_GPIO_WritePin(tmc2160_gpio, tmc2160_pin, GPIO_PIN_RESET);
-        HAL_SPI_TransmitReceive(tmc2160_spi, data, data, length, 1000);
+        HAL_SPI_TransmitReceive(tmc2160_spi, data, data, static_cast<uint16_t>(length), 1000);
         HAL_GPIO_WritePin(tmc2160_gpio, tmc2160_pin, GPIO_PIN_SET);
     }
 }

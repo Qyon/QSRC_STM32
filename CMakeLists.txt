@@ -21,6 +21,7 @@ add_definitions(-D__ASSEMBLY__)
 
 SET(LINKER_SCRIPT ${PROJECT_SOURCE_DIR}/STM32F103C8T6.ld)
 SET(COMMON_FLAGS " -mcpu=cortex-m3 -mthumb -Wall -ffunction-sections -O3 -fdata-sections -fno-common -Wdouble-promotion ")
+#SET(COMMON_FLAGS " -mcpu=cortex-m3 -mthumb -Wall -ffunction-sections -O0 -fdata-sections -fno-common -Wdouble-promotion ")
 SET(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -std=c++11 -fno-exceptions")
 SET(CMAKE_C_FLAGS "${COMMON_FLAGS} -std=gnu99")
 #SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map -Wl,--print-gc-sections --specs=nano.specs -T ${LINKER_SCRIPT}")
@@ -44,9 +45,11 @@ add_executable(${PROJECT_NAME}.elf ${USER_SOURCES} ${USER_SOURCES_CXX} ${USER_HE
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map")
 set(HEX_FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.bin)
+set(S_FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.S)
 add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${PROJECT_NAME}.elf> ${HEX_FILE}
         COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${PROJECT_NAME}.elf> ${BIN_FILE}
+        COMMAND ${CMAKE_OBJDUMP} -S --disassemble $<TARGET_FILE:${PROJECT_NAME}.elf> > ${S_FILE}
         COMMENT "Building ${HEX_FILE} \nBuilding ${BIN_FILE}")
 set(CMAKE_CXX_STANDARD 11)
 

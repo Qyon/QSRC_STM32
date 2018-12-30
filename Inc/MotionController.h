@@ -19,15 +19,17 @@ private:
     static const uint32_t STEPS_PER_MOTOR_ROTATION = 200*32;
     static const uint32_t GEAR_RATIO = 80;
     constexpr static const uint32_t STEPS_PER_ROTATION = (STEPS_PER_MOTOR_ROTATION * GEAR_RATIO);
-    constexpr static const float MAX_STEPS_PER_SECOND = (const float) (STEPS_PER_ROTATION / 60.0f); // faster and then timers stucks?
-    constexpr static const float DEGREES_ACC_MAX = 0.2f;
+    constexpr static const float MAX_STEPS_PER_SECOND = (const float) (STEPS_PER_ROTATION / 160.0f); // faster and then timers stucks?
+    constexpr static const float DEGREES_ACC_MAX = 0.4f;
     float acc_max;
     float speed_max = MAX_STEPS_PER_SECOND;
     float speed_current = 0;
 
-    GPIO_TypeDef* gpio;
+    GPIO_TypeDef* step_gpio;
     uint16_t step_pin;
+    GPIO_TypeDef* dir_gpio;
     uint16_t dir_pin;
+    GPIO_TypeDef* enable_gpio;
     uint16_t enable_pin;
     TIM_HandleTypeDef *htim;
     bool reverse_direction = false;
@@ -46,7 +48,8 @@ private:
 
     static uint32_t degreesToSteps(float degrees);
 public:
-    MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *gpio, uint16_t step_pin, uint16_t dir_pin,
+    MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *step_gpio, uint16_t step_pin,
+                         GPIO_TypeDef *dir_gpio, uint16_t dir_pin, GPIO_TypeDef *enable_gpio,
                          uint16_t enable_pin, bool reverse_direction, uint16_t angle_minimum,
                          uint16_t angle_maximum, SPI_HandleTypeDef *tmc2160_spi,
                          GPIO_TypeDef *tmc2160_gpio, uint16_t tmc2160_pin, uint8 channel);

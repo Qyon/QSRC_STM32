@@ -345,7 +345,7 @@ void RotorController::emergency_stop() {
 }
 
 void RotorController::writeTMCSPI(uint8 channel, uint8 *data, size_t length) {
-    if (channel == 0){
+    if (channel == 1){
         az->writeTMCSPI(data, length);
     } else {
         el->writeTMCSPI(data, length);
