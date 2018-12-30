@@ -16,13 +16,13 @@ extern "C" {
  */
 class MotionController {
 private:
-    static const uint32_t STEPS_PER_MOTOR_ROTATION = 200*32;
+    static const uint32_t STEPS_PER_MOTOR_ROTATION = 6400UL;
     static const uint32_t GEAR_RATIO = 80;
     constexpr static const uint32_t STEPS_PER_ROTATION = (STEPS_PER_MOTOR_ROTATION * GEAR_RATIO);
-    constexpr static const uint32_t MAX_STEPS_PER_SECOND = (STEPS_PER_ROTATION / 60); // faster and then timers stucks?
-    constexpr static const float DEGREES_ACC_MAX = 0.4f;
-    int32_t acc_max;
-    uint32_t speed_max = MAX_STEPS_PER_SECOND;
+    constexpr static const float MAX_STEPS_PER_SECOND = (const float) (STEPS_PER_ROTATION / 50.0f);
+    constexpr static const float DEGREES_ACC_MAX = 0.2f;
+    float acc_max;
+    float speed_max = MAX_STEPS_PER_SECOND;
     float speed_current = 0;
 
     GPIO_TypeDef* step_gpio;
