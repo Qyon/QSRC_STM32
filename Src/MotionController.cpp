@@ -11,11 +11,11 @@
 
 
 void MotionController::onTimer() {
-    if (position_current != position_destination || speed_current){
+    if (position_current != position_destination || (speed_current != 0.0f)){
         HAL_GPIO_TogglePin(gpio, step_pin);
         int32_t distance = position_destination - position_current;
         float speed_m;
-        if (distance){
+        if (distance != 0){
             speed_m = acc_max * sqrtf((2.0f*fabsf(distance)) / acc_max);
         } else {
             speed_m = 0;
@@ -25,7 +25,7 @@ void MotionController::onTimer() {
         }
         float speed_delta = speed_m - speed_current;
         float time_delta = 0.1f;
-        if (speed_current){
+        if (speed_current != 0.0f){
             time_delta = fabsf(1.0f / speed_current);
         }
         float acc_m = fabsf(speed_delta) / time_delta;
@@ -55,7 +55,7 @@ void MotionController::onTimer() {
         }
 
         //uint16_t time = (uint16_t) ((1.0f / fabsf(speed_current)) * 40000);
-        uint32_t time = (uint32_t) ((8000000.0f / fabsf(speed_current)));
+        auto time = (uint32_t) ((8000000.0f / fabsf(speed_current)));
         if (time > 1600000){
             time = 1600000;
         } else  if (time < 1){
@@ -106,7 +106,7 @@ void MotionController::moveTo(float angle) {
  */
 void MotionController::moveTo(uint32_t target_step) {
     position_destination = target_step;
-    if (!running){
+    if (running == 0u){
         HAL_GPIO_WritePin(gpio, enable_pin, GPIO_PIN_RESET);
         running = 1;
         __HAL_TIM_SET_AUTORELOAD(htim, 1);
@@ -133,7 +133,7 @@ float MotionController::stepsToDegrees(int32_t steps) {
 
 void MotionController::set(float value) {
     uint32_t steps = degreesToSteps(value);
-    while(running);
+    while(running != 0u);
     position_destination = steps;
     position_current = steps;
 }
@@ -144,7 +144,7 @@ void MotionController::emergency_stop() {
 }
 
 void MotionController::init() {
-    if (tmc2160_spi){
+    if (tmc2160_spi != nullptr){
         tmc2160_init(&tmc2160, tmc2160_config.channel, &tmc2160_config, tmc2160_defaultRegisterResetState);
         tmc2160_reset(&tmc2160);
         tmc2160.registerResetState[TMC2160_CHOPCONF] = FIELD_SET(tmc2160.registerResetState[TMC2160_CHOPCONF], TMC2160_INTPOL_MASK, TMC2160_INTPOL_SHIFT, 1);
