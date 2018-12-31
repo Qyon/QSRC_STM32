@@ -6,17 +6,19 @@
 #include <cmath>
 #include <cstdlib>
 #include <MotionController.h>
+#include <climits>
 
 #include "MotionController.h"
 
 
 void MotionController::onTimer() {
-    if (position_current != position_destination || speed_current){
+    int32_t distance = position_destination - position_current;
+
+    if (distance != 0 || speed_current){
         HAL_GPIO_TogglePin(step_gpio, step_pin);
-        int32_t distance = position_destination - position_current;
         float speed_m;
-        if (distance){
-            speed_m = acc_max * sqrtf((2.0f*fabsf(distance)) / acc_max);
+        if (distance != 0){
+            speed_m = acc_max * sqrtf((2.0f*abs(distance)) / acc_max);
         } else {
             speed_m = 0;
         }
@@ -25,7 +27,7 @@ void MotionController::onTimer() {
         }
         float speed_delta = speed_m - speed_current;
         float time_delta = 0.1f;
-        if (speed_current){
+        if (speed_current != 0.0f){
             time_delta = fabsf(1.0f / speed_current);
         }
         float acc_m = fabsf(speed_delta) / time_delta;
@@ -37,26 +39,26 @@ void MotionController::onTimer() {
             }
         }
         speed_current += speed_delta;
+        bool dir_positive = speed_current > 0;
         if (fabsf(speed_current) > speed_max){
-            if (speed_current > 0){
+            if (dir_positive){
                 speed_current = speed_max;
             } else {
                 speed_current = - speed_max;
             }
         }
 
-        if (speed_current > 0){
+        if (dir_positive){
             position_current ++;
             HAL_GPIO_WritePin(dir_gpio, dir_pin, reverse_direction ? GPIO_PIN_SET : GPIO_PIN_RESET);
-        }
-        if (speed_current < 0){
+        } else {
             position_current --;
             HAL_GPIO_WritePin(dir_gpio, dir_pin, reverse_direction ? GPIO_PIN_RESET : GPIO_PIN_SET);
         }
 
-        auto time = (int16_t) ((500000.0f / fabsf(speed_current)));
-        if (time > 16000){
-            time = 16000;
+        auto time = (uint32_t) ((500000.0f / fabsf(speed_current)));
+        if (time > UINT_MAX){
+            time = UINT_MAX;
         } else  if (time < 1){
             time = 1;
         }
@@ -64,7 +66,6 @@ void MotionController::onTimer() {
 
         HAL_GPIO_TogglePin(step_gpio, step_pin);
     } else {
-        //HAL_GPIO_WritePin(gpio, enable_pin, GPIO_PIN_SET);
         HAL_TIM_Base_Stop_IT(htim);
         HAL_TIM_Base_Stop(htim);
         running = 0;
