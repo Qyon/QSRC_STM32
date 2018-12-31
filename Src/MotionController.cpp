@@ -166,3 +166,11 @@ void MotionController::writeTMCSPI(uint8 *data, size_t length) {
         HAL_GPIO_WritePin(tmc2160_gpio, tmc2160_pin, GPIO_PIN_SET);
     }
 }
+
+void MotionController::setMaxSpeed(float max_speed) {
+    this->speed_max = max_speed;
+}
+
+float MotionController::getMaxSpeed() {
+    return this->speed_max;
+}

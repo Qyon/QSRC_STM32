@@ -158,7 +158,7 @@ void RotorController::send_respose_status() {
 }
 
 void RotorController::getRot2ProgAngle(float angle, uint8_t * angle_response) {
-    uint16_t tmp = (uint16_t) ((angle + 360.0f) * 10);
+    auto tmp = (uint16_t) ((angle + 360.0f) * 10);
     tmp = (uint16_t) (tmp % 10000);
     angle_response[0] = (uint8_t) (tmp / 1000);
     tmp = (uint16_t) (tmp % 1000);
@@ -167,7 +167,6 @@ void RotorController::getRot2ProgAngle(float angle, uint8_t * angle_response) {
     angle_response[2] = (uint8_t) (tmp / 10);
     tmp = (uint16_t) (tmp % 10);
     angle_response[3] = (uint8_t) (tmp % 10);
-
 }
 
 void RotorController::process_set_command(Rot2ProgCmd *pCmd) {
@@ -266,8 +265,6 @@ void RotorController::handleCommand(CommandPacket *pPacket, CommandPacket *pResp
     memset(pResponse, 0, sizeof(CommandPacket));
     pResponse->header = packetHeader;
     pResponse->command = cmdOkResponse;
-//    debug("Command: ");
-//    debug(pPacket->command);
 
     switch (pPacket->command){
         case cmdPing:
@@ -305,6 +302,15 @@ void RotorController::handleCommand(CommandPacket *pPacket, CommandPacket *pResp
         case cmdSetAzEl:
             this->az->set(pPacket->payload.setAzEl.az);
             this->el->set(pPacket->payload.setAzEl.el);
+            break;
+        case cmdSetMaxSpeed:
+            this->az->setMaxSpeed(pPacket->payload.setMaxSpeed.az);
+            this->el->setMaxSpeed(pPacket->payload.setMaxSpeed.el);
+            break;
+        case cmdReadMaxSpeed:
+            pResponse->command = cmdReadMaxSpeedResponse;
+            pResponse->payload.readMaxSpeed.az = this->az->getMaxSpeed();
+            pResponse->payload.readMaxSpeed.el = this->el->getMaxSpeed();
             break;
 
         case cmdReadEEPROMResponse:

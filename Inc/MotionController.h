@@ -70,6 +70,10 @@ public:
     void emergency_stop();
 
     void writeTMCSPI(uint8 *data, size_t length);
+
+    void setMaxSpeed(float max_speed);
+
+    float getMaxSpeed();
 };
 
 
