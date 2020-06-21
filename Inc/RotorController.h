@@ -58,7 +58,6 @@ private:
 
     uint32_t tmp = 0;
 
-    void encoderStartSPITransfer();
     void encoderStartSPITransferRead();
 
 
@@ -89,7 +88,7 @@ public:
 
     void onSPITxComplete(SPI_HandleTypeDef *pDef);
     void onSPIRxComplete(SPI_HandleTypeDef *pDef);
-
+    void encoderStartSPITransfer();
 
     volatile uint32_t s;
 

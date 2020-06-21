@@ -33,6 +33,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     else if (htim->Instance == TIM3){
         el.onTimer();
     }
+    else if (htim->Instance == TIM4){
+        controller.encoderStartSPITransfer();
+    }
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)

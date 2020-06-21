@@ -99,6 +99,12 @@ void RotorController::loop() {
         this->emergency_stopped = false;
     }
 
+    static uint32_t test_time = HAL_GetTick();
+    if (HAL_GetTick() - test_time > MAX_TIME_WITHOUT_VALID_RX){
+        test_time = HAL_GetTick();
+        test_time = HAL_GetTick();
+    }
+
     if (this->az->isRunning() || this->el->isRunning()){
         HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_SET);
     } else {
@@ -199,7 +205,6 @@ void RotorController::onSPIRxComplete(SPI_HandleTypeDef *pDef) {
     if (pDef->Instance != this->encoder_spi->Instance){
         return;
     }
-    encoderStartSPITransfer();
 }
 
 uint16_t RotorController::getEncAz() {
@@ -211,10 +216,7 @@ uint16_t RotorController::getEncEl() {
 }
 
 void RotorController::init() {
-    if (!encoder_spi_in_progress){
-        encoder_spi_in_progress = true;
-        encoderStartSPITransfer();
-    }
+    HAL_TIM_Base_Start_IT(&htim4);
     az->init();
     el->init();
 
