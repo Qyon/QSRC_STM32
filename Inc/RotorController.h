@@ -47,7 +47,7 @@ private:
     const uint16_t encoder_read_angle_command = 0xffff;
     volatile uint16_t raw_encoder_az;
     volatile uint16_t raw_encoder_el;
-    volatile uint16_t raw_encoder_tmp;
+    volatile uint16_t raw_encoder_tmp = 0;
     volatile uint16_t * raw_encoder_current = nullptr;
     bool encoder_spi_read = false;
     volatile bool encoder_spi_in_progress = false;

@@ -1,59 +1,59 @@
-cmake_minimum_required(VERSION 3.6)
-include(CMakeForceCompiler)
-SET(CMAKE_SYSTEM_NAME "Generic")
+#THIS FILE IS AUTO GENERATED FROM THE TEMPLATE! DO NOT CHANGE!
+SET(CMAKE_SYSTEM_NAME Generic)
 SET(CMAKE_SYSTEM_VERSION 1)
-
-set(TOOLCHAIN_DIR D:/Programy/gcc-arm-none-eabi-6-2017-q1-update-win32/bin/)
-
-CMAKE_FORCE_C_COMPILER(${TOOLCHAIN_DIR}/arm-none-eabi-gcc.exe GNU)
-CMAKE_FORCE_CXX_COMPILER(${TOOLCHAIN_DIR}/arm-none-eabi-g++.exe GNU)
-
-project(QSRC_STM32 C ASM CXX)
+cmake_minimum_required(VERSION 3.7)
+set(TOOLCHAIN_DIR "D:/Programy/gcc-arm-none-eabi-9-2019-q4-major-win32/bin/")
+LIST(APPEND CMAKE_PROGRAM_PATH ${TOOLCHAIN_DIR})
 
 
-add_definitions(-DSTM32F103C8)
-add_definitions(-DSTM32F10X_MD)
-add_definitions(-DSTM32F103xB)
-add_definitions(-DSUPPORT_CPLUSPLUS)
-add_definitions(-D__ASSEMBLY__)
+# specify cross compilers and tools
+SET(CMAKE_C_COMPILER_WORKS 1)
+SET(CMAKE_C_COMPILER arm-none-eabi-gcc)
+SET(CMAKE_CXX_COMPILER_WORKS 1)
+SET(CMAKE_CXX_COMPILER arm-none-eabi-g++)
+set(CMAKE_ASM_COMPILER  arm-none-eabi-gcc)
+set(CMAKE_AR arm-none-eabi-ar)
+set(CMAKE_OBJCOPY ${TOOLCHAIN_DIR}arm-none-eabi-objcopy.exe)
+set(CMAKE_OBJDUMP arm-none-eabi-objdump)
+set(SIZE arm-none-eabi-size)
 
+SET(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32F103C8Tx_FLASH.ld)
 
+#Uncomment for hardware floating point
+#SET(FPU_FLAGS "-mfloat-abi=hard -mfpu=fpv4-sp-d16")
+#add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
 
-SET(LINKER_SCRIPT ${PROJECT_SOURCE_DIR}/STM32F103C8T6.ld)
-SET(COMMON_FLAGS " -mcpu=cortex-m3 -mthumb -Wall -ffunction-sections -O3 -fdata-sections -fno-common -Wdouble-promotion ")
-#SET(COMMON_FLAGS " -mcpu=cortex-m3 -mthumb -Wall -ffunction-sections -O0 -fdata-sections -fno-common -Wdouble-promotion ")
-SET(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -std=c++11 -fno-exceptions")
-SET(CMAKE_C_FLAGS "${COMMON_FLAGS} -std=gnu99")
-#SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map -Wl,--print-gc-sections --specs=nano.specs -T ${LINKER_SCRIPT}")
-SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map -Wl,--gc-sections  --specs=nano.specs -T ${LINKER_SCRIPT}")
+#Uncomment for software floating point
+SET(FPU_FLAGS "-mfloat-abi=soft")
 
-file(GLOB_RECURSE USER_SOURCES "*.c")
-file(GLOB_RECURSE USER_SOURCES_CXX "*.cpp")
-file(GLOB_RECURSE USER_HEADERS "*.h")
-#file(GLOB_RECURSE HAL_SOURCES "stm_lib/src/*.c")
+SET(COMMON_FLAGS
+    "-mcpu=cortex-m3 ${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections \
+    -g -fno-common -fmessage-length=0 -specs=nosys.specs -specs=nano.specs")
 
-include_directories(
-        Drivers/CMSIS/Device/ST/STM32F1xx/Include
-        Drivers/CMSIS/Include
-        Drivers/STM32F1xx_HAL_Driver/Inc/Legacy
-        Drivers/STM32F1xx_HAL_Driver/Inc
-        Inc
-        .)
+SET(CMAKE_CXX_FLAGS_INIT "${COMMON_FLAGS} -std=c++11")
+SET(CMAKE_C_FLAGS_INIT "${COMMON_FLAGS} -std=gnu99")
+SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,-gc-sections,--print-memory-usage -T ${LINKER_SCRIPT}")
 
-add_executable(${PROJECT_NAME}.elf ${USER_SOURCES} ${USER_SOURCES_CXX} ${USER_HEADERS} ${HAL_SOURCES} Drivers/CMSIS/Device/ST/STM32F1xx/Source/Templates/gcc/startup_stm32f103xb.s ${LINKER_SCRIPT})
+PROJECT(QSRC_STM32 C CXX ASM)
+set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map")
-set(HEX_FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.hex)
-set(BIN_FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.bin)
-set(S_FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.S)
+#add_definitions(-DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT=1)
+add_definitions(-D__weak=__attribute__\(\(weak\)\) -D__packed=__attribute__\(\(__packed__\)\) -DUSE_HAL_DRIVER -DSTM32F103xB)
+
+file(GLOB_RECURSE SOURCES "startup/*.*" "Drivers/*.*" "Src/*.*" "Inc/*.*" Drivers/TMC-API/tmc/helpers/*.* Drivers/TMC-API/tmc/ic/TMC2160/*.*)
+
+include_directories(Inc Drivers/STM32F1xx_HAL_Driver/Inc Drivers/STM32F1xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32F1xx/Include Drivers/CMSIS/Include Drivers/TMC-API/tmc/helpers  Drivers/TMC-API/tmc/ic/TMC2160)
+
+add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
+
+set(CMAKE_EXE_LINKER_FLAGS
+    "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
+
+set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
+set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)
+
 add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${PROJECT_NAME}.elf> ${HEX_FILE}
         COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${PROJECT_NAME}.elf> ${BIN_FILE}
-        COMMAND ${CMAKE_OBJDUMP} -S --disassemble $<TARGET_FILE:${PROJECT_NAME}.elf> > ${S_FILE}
-        COMMENT "Building ${HEX_FILE} \nBuilding ${BIN_FILE}")
-set(CMAKE_CXX_STANDARD 11)
-
-add_custom_target(program
-        DEPENDS ${PROJECT_NAME}.elf
-        COMMAND D:/Programy/stlink-1.3.0-win64/bin/st-flash  --reset write ${BIN_FILE} 0x08000000
-        COMMENT "flashing ${BIN_FILE}")
+        COMMENT "Building ${HEX_FILE}
+Building ${BIN_FILE}")

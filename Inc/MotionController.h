@@ -9,7 +9,7 @@
 #include "dma.h"
 #include "tim.h"
 extern "C" {
-    #include <Drivers/TMC-API/tmc/ic/TMC2160/TMC2160.h>
+    #include <TMC2160.h>
 };
 /**
  *

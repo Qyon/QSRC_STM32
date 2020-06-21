@@ -2,7 +2,6 @@
 // Created by Admin on 2017-04-01.
 //
 
-#include <stm32f1xx_hal_gpio.h>
 #include <cmath>
 #include <cstdlib>
 #include <MotionController.h>
