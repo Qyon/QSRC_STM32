@@ -4,6 +4,8 @@
 
 #ifndef QSRC_STM32_ROTORCONTROLLER_H
 #define QSRC_STM32_ROTORCONTROLLER_H
+static const int ERROR_BIT = 1 << 14;
+
 #include "stm32f1xx_hal.h"
 #include "dma.h"
 #include "tim.h"
@@ -45,9 +47,12 @@ private:
     bool debug_enabled = false;
 
     const uint16_t encoder_read_angle_command = 0xffff;
+    const uint16_t encoder_read_error_register_command = 0x4001;
     volatile uint16_t raw_encoder_az;
     volatile uint16_t raw_encoder_el;
     volatile uint16_t raw_encoder_tmp = 0;
+    volatile uint16_t raw_encoder_last_error = 0;
+    volatile uint16_t raw_encoder_error_read_mode = 0;
     volatile uint16_t * raw_encoder_current = nullptr;
     bool encoder_spi_read = false;
     volatile bool encoder_spi_in_progress = false;

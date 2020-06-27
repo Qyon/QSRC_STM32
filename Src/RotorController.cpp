@@ -26,22 +26,41 @@ RotorController::RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeD
 
 void RotorController::encoderStartSPITransfer() {
     encoder_spi_read = true;
-    if (raw_encoder_current == &raw_encoder_az){
-        raw_encoder_az = raw_encoder_tmp;
-        raw_encoder_current = &raw_encoder_el;
-        HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_RESET);
+    if (raw_encoder_tmp & ERROR_BIT){
+        raw_encoder_error_read_mode = 1;
+        HAL_SPI_Transmit_IT(encoder_spi, (uint8_t *) &encoder_read_error_register_command, 1);
     } else {
-        raw_encoder_el = raw_encoder_tmp;
-        raw_encoder_current = &raw_encoder_az;
+        if (raw_encoder_current == &raw_encoder_az){
+            if (raw_encoder_error_read_mode){
+                raw_encoder_last_error = raw_encoder_tmp;
+            } else {
+                raw_encoder_az = raw_encoder_tmp;
+            }
 
-        HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_SET);
+            raw_encoder_current = &raw_encoder_el;
+            HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_RESET);
+        } else {
+            if (raw_encoder_error_read_mode) {
+                raw_encoder_last_error = raw_encoder_tmp;
+            }
+            else {
+                raw_encoder_el = raw_encoder_tmp;
+
+            }
+            raw_encoder_current = &raw_encoder_az;
+
+            HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_SET);
+        }
+        for (int i = 0; i < 15; ++i) {
+            __NOP();
+        }
+        raw_encoder_error_read_mode = 0;
+
+        HAL_SPI_Transmit_IT(encoder_spi, (uint8_t *) &encoder_read_angle_command, 1);
     }
-    for (int i = 0; i < 15; ++i) {
-        __NOP();
-    }
-    HAL_SPI_Transmit_IT(encoder_spi, (uint8_t *) &encoder_read_angle_command, 1);
+
     tmp ++;
 }
 
@@ -92,7 +111,7 @@ void RotorController::loop() {
      * If no valid data from controller recived in given amount of time proceed to emergency stop
      */
     if (HAL_GetTick() - last_valid_uart_rcv > MAX_TIME_WITHOUT_VALID_RX){
-        this->emergency_stop();
+        //this->emergency_stop();
         //HAL_GPIO_WritePin(green_led_GPIO_Port, green_led_Pin, GPIO_PIN_SET);
     } else {
         //HAL_GPIO_WritePin(green_led_GPIO_Port, green_led_Pin, GPIO_PIN_RESET);
@@ -101,13 +120,21 @@ void RotorController::loop() {
 
     static uint32_t test_time = HAL_GetTick();
     if (HAL_GetTick() - test_time > MAX_TIME_WITHOUT_VALID_RX){
-        test_time = HAL_GetTick();
+        float angle = 360.0f * (((float) (0x3fff-(raw_encoder_az & 0x3fff))) / 0x3fff);
         test_time = HAL_GetTick();
     }
-
+    static float measure[360];
+    static uint16_t goto_angle = 0;
     if (this->az->isRunning() || this->el->isRunning()){
         HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_SET);
     } else {
+//        HAL_Delay(1000);
+//        measure[goto_angle] = 360.0f * (((float) (0x3fff-(raw_encoder_az & 0x3fff))) / 0x3fff);
+//        goto_angle += 1;
+//        if (goto_angle > 360){
+//            goto_angle = 0;
+//        }
+//        this->az->moveTo((float)goto_angle);
         HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_RESET);
     }
 }
