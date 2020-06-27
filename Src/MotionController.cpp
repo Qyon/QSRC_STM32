@@ -30,7 +30,7 @@ void MotionController::onTimer() {
             time_delta = fabsf(1.0f / speed_current);
         }
         float acc_m = fabsf(speed_delta) / time_delta;
-        if (acc_m > acc_max){
+        if ((distance && acc_m > acc_max) || (!distance && (acc_m > 5*acc_max))){
             if (speed_delta > 0){
                 speed_delta = acc_max * time_delta;
             } else {
@@ -38,32 +38,40 @@ void MotionController::onTimer() {
             }
         }
         speed_current += speed_delta;
-        bool dir_positive = speed_current > 0;
-        if (fabsf(speed_current) > speed_max){
-            if (dir_positive){
-                speed_current = speed_max;
-            } else {
-                speed_current = - speed_max;
-            }
-        }
 
-        if (dir_positive){
-            position_current ++;
-            HAL_GPIO_WritePin(dir_gpio, dir_pin, reverse_direction ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        if (!speed_current && !distance){
+            HAL_TIM_Base_Stop_IT(htim);
+            HAL_TIM_Base_Stop(htim);
+            running = 0;
         } else {
-            position_current --;
-            HAL_GPIO_WritePin(dir_gpio, dir_pin, reverse_direction ? GPIO_PIN_RESET : GPIO_PIN_SET);
+            bool dir_positive = speed_current > 0;
+            if (fabsf(speed_current) > speed_max){
+                if (dir_positive){
+                    speed_current = speed_max;
+                } else {
+                    speed_current = - speed_max;
+                }
+            }
+
+            if (dir_positive){
+                position_current ++;
+                HAL_GPIO_WritePin(dir_gpio, dir_pin, reverse_direction ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            } else {
+                position_current --;
+                HAL_GPIO_WritePin(dir_gpio, dir_pin, reverse_direction ? GPIO_PIN_RESET : GPIO_PIN_SET);
+            }
+
+            auto time = (uint32_t) ((500000.0f / fabsf(speed_current)));
+            if (time > UINT_MAX){
+                time = UINT_MAX;
+            } else  if (time < 1){
+                time = 1;
+            }
+            __HAL_TIM_SET_AUTORELOAD(htim, time);
+
+            HAL_GPIO_TogglePin(step_gpio, step_pin);
         }
 
-        auto time = (uint32_t) ((500000.0f / fabsf(speed_current)));
-        if (time > UINT_MAX){
-            time = UINT_MAX;
-        } else  if (time < 1){
-            time = 1;
-        }
-        __HAL_TIM_SET_AUTORELOAD(htim, time);
-
-        HAL_GPIO_TogglePin(step_gpio, step_pin);
     } else {
         HAL_TIM_Base_Stop_IT(htim);
         HAL_TIM_Base_Stop(htim);
