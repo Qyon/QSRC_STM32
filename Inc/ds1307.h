@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef DS1307_h
 #define DS1307_h
 #include "stm32f1xx_hal.h"
+#include <cstdio>
 
 
 #define DS1307_ADDRESS              (0x68 << 1)
