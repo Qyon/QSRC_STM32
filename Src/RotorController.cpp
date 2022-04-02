@@ -24,66 +24,87 @@ RotorController::RotorController(UART_HandleTypeDef *comm_uart, UART_HandleTypeD
       el(el_mc), aux_gpio(aux_gpio), aux_pin(aux_pin) {
 }
 
+void RotorController::csEncoder(int encoder) const {
+    if (encoder < 0){
+        HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_SET);
+    } else if (encoder == 0){
+        HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_SET);
+    }else if (encoder == 1){
+        HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_RESET);
+    }
+
+}
+
+
 void RotorController::encoderStartSPITransfer() {
-    encoder_spi_read = true;
-    if (raw_encoder_tmp & ERROR_BIT){
-        raw_encoder_error_read_mode = 1;
+    current_encoder = (~current_encoder) & 1;
+    csEncoder(current_encoder);
+
+    if (raw_encoder_error_read_mode[current_encoder] == 1){
         HAL_SPI_Transmit_IT(encoder_spi, (uint8_t *) &encoder_read_error_register_command, 1);
     } else {
-        if (raw_encoder_current == &raw_encoder_az){
-            if (raw_encoder_error_read_mode){
-                raw_encoder_last_error = raw_encoder_tmp;
-            } else {
-                raw_encoder_az = raw_encoder_tmp;
-            }
-
-            raw_encoder_current = &raw_encoder_el;
-            HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_RESET);
-        } else {
-            if (raw_encoder_error_read_mode) {
-                raw_encoder_last_error = raw_encoder_tmp;
-            }
-            else {
-                raw_encoder_el = raw_encoder_tmp;
-
-            }
-            raw_encoder_current = &raw_encoder_az;
-
-            HAL_GPIO_WritePin(encoder_az_gpio, encoder_az_pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(encoder_el_gpio, encoder_el_pin, GPIO_PIN_SET);
-        }
-        for (int i = 0; i < 15; ++i) {
-            __NOP();
-        }
-        raw_encoder_error_read_mode = 0;
-
         HAL_SPI_Transmit_IT(encoder_spi, (uint8_t *) &encoder_read_angle_command, 1);
     }
 
     tmp ++;
 }
 
+
 void RotorController::encoderStartSPITransferRead() {
-    encoder_spi_read = false;
-    if (raw_encoder_current == &raw_encoder_az){
-        HAL_GPIO_TogglePin(encoder_az_gpio, encoder_az_pin);
-        for (int i = 0; i < 15; ++i) {
-            __NOP();
-        }
-        HAL_GPIO_TogglePin(encoder_az_gpio, encoder_az_pin);
-    } else {
-        HAL_GPIO_TogglePin(encoder_el_gpio, encoder_el_pin);
-        for (int i = 0; i < 15; ++i) {
-            __NOP();
-        }
-        HAL_GPIO_TogglePin(encoder_el_gpio, encoder_el_pin);
-    }
-    for (int i = 0; i < 15; ++i) {
-        __NOP();
-    }
+    csEncoder(-1);
+    csEncoder(current_encoder);
+    raw_encoder_tmp = 0xffff;
     HAL_SPI_Receive_IT(encoder_spi, (uint8_t *) &raw_encoder_tmp, 1);
     tmp ++;
+}
+
+void RotorController::encoderEndSPITransferRead() {
+    csEncoder(-1);
+    if (raw_encoder_tmp & ERROR_BIT){
+        raw_encoder_error_read_mode[current_encoder] = 1;
+    }
+    if (current_encoder == 0){
+        if (raw_encoder_error_read_mode[current_encoder] == 1){
+            raw_encoder_last_error = raw_encoder_tmp;
+            raw_encoder_error_read_mode[current_encoder] = 1;
+        } else if (raw_encoder_error_read_mode[current_encoder] == 2){
+            raw_encoder_last_error = raw_encoder_tmp;
+            raw_encoder_error_read_mode[current_encoder] = 0;
+        } else {
+            raw_encoder_az_values[raw_encoder_az_values_ptr] = raw_encoder_tmp & 0x3fff;
+            raw_encoder_az_values_ptr++;
+            if (raw_encoder_az_values_ptr >= ENCODER_AVERAGES){
+                raw_encoder_az_values_ptr = 0;
+            }
+        }
+    } else {
+        if (raw_encoder_error_read_mode[current_encoder] == 1){
+            raw_encoder_last_error = raw_encoder_tmp;
+            raw_encoder_error_read_mode[current_encoder] = 1;
+        } else if (raw_encoder_error_read_mode[current_encoder] == 2){
+            raw_encoder_last_error = raw_encoder_tmp;
+            raw_encoder_error_read_mode[current_encoder] = 0;
+        }
+        else {
+            raw_encoder_el_values[raw_encoder_el_values_ptr] = raw_encoder_tmp & 0x3fff;
+            raw_encoder_el_values_ptr++;
+            if (raw_encoder_el_values_ptr >= ENCODER_AVERAGES){
+                raw_encoder_el_values_ptr = 0;
+            }
+        }
+    }
+}
+
+char *array_to_str(char * str, int *array, unsigned int n) {
+    int r;
+    if (n == 0) return 0;
+    if (n == 1) r = sprintf(str, "%d", array[0]);
+    else        r = sprintf(str, "%d, ", array[0]);
+    array_to_str(str + r, array + 1, n - 1);
+    return str;
 }
 
 void RotorController::loop() {
@@ -120,21 +141,31 @@ void RotorController::loop() {
 
     static uint32_t test_time = HAL_GetTick();
     if (HAL_GetTick() - test_time > MAX_TIME_WITHOUT_VALID_RX){
-        float angle = 360.0f * (((float) (0x3fff-(raw_encoder_az & 0x3fff))) / 0x3fff);
+        float angle = getEncAzAngle();
         test_time = HAL_GetTick();
     }
-    static float measure[360];
+    static const int max_angle = 359;
+    static int measure[max_angle+1];
     static uint16_t goto_angle = 0;
+    static bool done = false;
     if (this->az->isRunning() || this->el->isRunning()){
         HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_SET);
     } else {
-//        HAL_Delay(1000);
-//        measure[goto_angle] = 360.0f * (((float) (0x3fff-(raw_encoder_az & 0x3fff))) / 0x3fff);
-//        goto_angle += 1;
-//        if (goto_angle > 360){
-//            goto_angle = 0;
-//        }
-//        this->az->moveTo((float)goto_angle);
+        if (done){
+            char log[4000];
+            array_to_str((char*)log, measure, max_angle);
+            HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_SET);
+
+            done = false;
+        }
+        HAL_Delay(100);
+        measure[goto_angle] = getEncAzAngle();
+        goto_angle += 1;
+        if (goto_angle > max_angle){
+            goto_angle = 0;
+            done = true;
+        }
+        this->az->moveTo(goto_angle/1.0f);
         HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_RESET);
     }
 }
@@ -232,14 +263,23 @@ void RotorController::onSPIRxComplete(SPI_HandleTypeDef *pDef) {
     if (pDef->Instance != this->encoder_spi->Instance){
         return;
     }
+    encoderEndSPITransferRead();
 }
 
 uint16_t RotorController::getEncAz() {
-    return (uint16_t) (raw_encoder_az & 0x3fff);
+    return getAverageEncoderValue(const_cast<uint16_t *>(raw_encoder_az_values));
 }
 
 uint16_t RotorController::getEncEl() {
-    return (uint16_t) (raw_encoder_el & 0x3fff);
+    return getAverageEncoderValue(const_cast<uint16_t *>(raw_encoder_el_values));
+}
+
+uint16_t RotorController::getAverageEncoderValue(const uint16_t  *rawEncoderValues) {
+    uint32_t sum = 0;
+    for (int i = 0; i < ENCODER_AVERAGES; ++i) {
+        sum += rawEncoderValues[i];
+    }
+    return sum / ENCODER_AVERAGES;
 }
 
 void RotorController::init() {
@@ -325,8 +365,8 @@ void RotorController::handleCommand(CommandPacket *pPacket, CommandPacket *pResp
             break;
         case cmdReadEncoders:
             pResponse->command = cmdReadEncodersResponse;
-            pResponse->payload.readEncodersResponse.az = this->raw_encoder_az;
-            pResponse->payload.readEncodersResponse.el = this->raw_encoder_el;
+            pResponse->payload.readEncodersResponse.az = this->getEncAz();
+            pResponse->payload.readEncodersResponse.el = this->getEncAz();
             break;
         case cmdSetAzEl:
             this->az->set(pPacket->payload.setAzEl.az);
@@ -386,4 +426,13 @@ void RotorController::writeTMCSPI(uint8 channel, uint8 *data, size_t length) {
         el->writeTMCSPI(data, length);
     }
 }
+
+float RotorController::getEncAzAngle() {
+    return getEncAz();
+}
+
+float RotorController::getEncElAngle() {
+    return 360.0f * ((float) ((0xffff & ((getEncEl() & 0x3fff) ^ (1 << 13))) - (1 << 13)) / 0x3fff);
+}
+
 

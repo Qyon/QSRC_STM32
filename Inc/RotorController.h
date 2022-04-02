@@ -6,6 +6,8 @@
 #define QSRC_STM32_ROTORCONTROLLER_H
 static const int ERROR_BIT = 1 << 14;
 
+
+
 #include "stm32f1xx_hal.h"
 #include "dma.h"
 #include "tim.h"
@@ -19,6 +21,7 @@ extern "C" {
 
 class RotorController {
 private:
+    static const int ENCODER_AVERAGES = 10;
     const uint16_t MAX_TIME_WITHOUT_VALID_RX = 1000;
     UART_HandleTypeDef *comm_uart;
     UART_HandleTypeDef *dbg_uart;
@@ -48,12 +51,14 @@ private:
 
     const uint16_t encoder_read_angle_command = 0xffff;
     const uint16_t encoder_read_error_register_command = 0x4001;
-    volatile uint16_t raw_encoder_az;
-    volatile uint16_t raw_encoder_el;
+    volatile uint16_t raw_encoder_az_values[ENCODER_AVERAGES];
+    volatile uint8 raw_encoder_az_values_ptr = 0;
+    volatile uint16_t raw_encoder_el_values[ENCODER_AVERAGES];
+    volatile uint8 raw_encoder_el_values_ptr = 0;
     volatile uint16_t raw_encoder_tmp = 0;
     volatile uint16_t raw_encoder_last_error = 0;
-    volatile uint16_t raw_encoder_error_read_mode = 0;
-    volatile uint16_t * raw_encoder_current = nullptr;
+    uint16_t raw_encoder_error_read_mode[2];
+    volatile uint8_t current_encoder = 0;
     bool encoder_spi_read = false;
     volatile bool encoder_spi_in_progress = false;
     bool emergency_stopped = false;
@@ -78,6 +83,8 @@ private:
 
     uint16_t getEncAz();
     uint16_t getEncEl();
+    float getEncAzAngle();
+    float getEncElAngle();
 
     bool validateCommandPacket(CommandPacket *pPacket);
     void emergency_stop();
@@ -115,6 +122,12 @@ public:
     void startUartRx();
 
     void writeTMCSPI(uint8 channel, uint8 *data, size_t length);
+
+    uint16_t getAverageEncoderValue(const uint16_t *rawEncoderValues);
+
+    void csEncoder(int encoder) const;
+
+    void encoderEndSPITransferRead();
 };
 
 

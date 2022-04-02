@@ -55,8 +55,12 @@ ENTRY(Reset_Handler)
 /* Highest address of the user mode stack */
 _estack = 0x20005000;    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x200;      /* required amount of heap  */
+_Min_Heap_Size = 0;   /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
+
+/* The size of the heap used by the application. NOTE: you need to adjust   */
+HEAP_SIZE = 0x400;
+
 
 /* Specify the memory areas */
 MEMORY
@@ -161,6 +165,15 @@ SECTIONS
     _ebss = .;         /* define a global symbol at bss end */
     __bss_end__ = _ebss;
   } >RAM
+
+
+    .heap : {
+        __heap_start = .;
+        . = . + HEAP_SIZE;
+        . = ALIGN(4);
+        __heap_end = .;
+    } >RAM
+
 
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack :

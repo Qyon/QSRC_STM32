@@ -70,14 +70,11 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 /*
 
  */
-void startup() {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+__NO_RETURN void startup() {
     controller.init();
     while (true){
         controller.loop();
     }
-#pragma GCC diagnostic pop
 }
 
 
