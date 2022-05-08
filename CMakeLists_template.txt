@@ -12,10 +12,10 @@ SET(CMAKE_C_COMPILER arm-none-eabi-gcc)
 SET(CMAKE_CXX_COMPILER_WORKS 1)
 SET(CMAKE_CXX_COMPILER arm-none-eabi-g++)
 set(CMAKE_ASM_COMPILER  arm-none-eabi-gcc)
-set(CMAKE_AR arm-none-eabi-ar)
+set(CMAKE_AR ${TOOLCHAIN_DIR}arm-none-eabi-ar)
 set(CMAKE_OBJCOPY ${TOOLCHAIN_DIR}arm-none-eabi-objcopy.exe)
-set(CMAKE_OBJDUMP arm-none-eabi-objdump)
-set(SIZE arm-none-eabi-size)
+set(CMAKE_OBJDUMP ${TOOLCHAIN_DIR}arm-none-eabi-objdump)
+set(SIZE ${TOOLCHAIN_DIR}arm-none-eabi-size)
 
 SET(LINKER_SCRIPT $${CMAKE_SOURCE_DIR}/${linkerScript})
 
@@ -28,7 +28,10 @@ SET(FPU_FLAGS "-mfloat-abi=soft")
 
 SET(COMMON_FLAGS
     "-mcpu=${mcpu} $${FPU_FLAGS} -mthumb -mthumb-interwork -ffunction-sections -fdata-sections \
-    -g -fno-common -fmessage-length=0 ${linkerFlags}")
+    -g -fno-common -fmessage-length=0 ${linkerFlags} -fno-exceptions")
+
+add_link_options(-fno-exceptions -Wl,--gc-sections)
+
 
 SET(CMAKE_CXX_FLAGS_INIT "$${COMMON_FLAGS} -std=c++11")
 SET(CMAKE_C_FLAGS_INIT "$${COMMON_FLAGS} -std=gnu99")

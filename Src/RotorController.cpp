@@ -132,40 +132,16 @@ void RotorController::loop() {
      * If no valid data from controller recived in given amount of time proceed to emergency stop
      */
     if (HAL_GetTick() - last_valid_uart_rcv > MAX_TIME_WITHOUT_VALID_RX){
-        //this->emergency_stop();
+        this->emergency_stop();
         //HAL_GPIO_WritePin(green_led_GPIO_Port, green_led_Pin, GPIO_PIN_SET);
     } else {
         //HAL_GPIO_WritePin(green_led_GPIO_Port, green_led_Pin, GPIO_PIN_RESET);
         this->emergency_stopped = false;
     }
 
-    static uint32_t test_time = HAL_GetTick();
-    if (HAL_GetTick() - test_time > MAX_TIME_WITHOUT_VALID_RX){
-        float angle = getEncAzAngle();
-        test_time = HAL_GetTick();
-    }
-    static const int max_angle = 359;
-    static int measure[max_angle+1];
-    static uint16_t goto_angle = 0;
-    static bool done = false;
     if (this->az->isRunning() || this->el->isRunning()){
         HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_SET);
     } else {
-        if (done){
-            char log[4000];
-            array_to_str((char*)log, measure, max_angle);
-            HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_SET);
-
-            done = false;
-        }
-        HAL_Delay(100);
-        measure[goto_angle] = getEncAzAngle();
-        goto_angle += 1;
-        if (goto_angle > max_angle){
-            goto_angle = 0;
-            done = true;
-        }
-        this->az->moveTo(goto_angle/1.0f);
         HAL_GPIO_WritePin(yellow_led_GPIO_Port, yellow_led_Pin, GPIO_PIN_RESET);
     }
 }
