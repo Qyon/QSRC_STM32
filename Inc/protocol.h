@@ -28,6 +28,8 @@ enum ProtocolCommand {
     cmdReadMaxSpeed = 0x11,
     cmdReadMaxSpeedResponse = 0x12,
     cmdSetMaxSpeed = 0x13,
+    cmdGoToAzElResponse = 0x14,
+    cmdSetAzElResponse = 0x15,
 
     cmdOkResponse = 0xfd,
     cmdErrorResponse = 0xfe,

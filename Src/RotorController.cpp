@@ -333,6 +333,9 @@ void RotorController::handleCommand(CommandPacket *pPacket, CommandPacket *pResp
         case cmdGoToAzEl:
             this->az->moveTo(pPacket->payload.goToAzEl.az);
             this->el->moveTo(pPacket->payload.goToAzEl.el);
+            pResponse->command = cmdGoToAzElResponse;
+            pResponse->payload.goToAzEl.az = pPacket->payload.goToAzEl.az;
+            pResponse->payload.goToAzEl.el = pPacket->payload.goToAzEl.el;
             break;
         case cmdEmergencyStop:
             this->emergency_stop();
@@ -357,6 +360,9 @@ void RotorController::handleCommand(CommandPacket *pPacket, CommandPacket *pResp
         case cmdSetAzEl:
             this->az->set(pPacket->payload.setAzEl.az);
             this->el->set(pPacket->payload.setAzEl.el);
+            pResponse->command = cmdSetAzElResponse;
+            pResponse->payload.setAzEl.az = pPacket->payload.setAzEl.az;
+            pResponse->payload.setAzEl.el = pPacket->payload.setAzEl.el;
             break;
         case cmdSetMaxSpeed:
             this->az->setMaxSpeed(pPacket->payload.setMaxSpeed.az);
@@ -392,8 +398,10 @@ void RotorController::onUSARTTxComplete(UART_HandleTypeDef *huart) {
 }
 
 void RotorController::onUSARTError(UART_HandleTypeDef *huart) {
-    if (huart->ErrorCode == HAL_UART_ERROR_FE && cmd_to_process.header){
+    if (huart->ErrorCode == HAL_UART_ERROR_FE && cmd_to_process.header) {
         // ignore standard error
+    } else if (huart->ErrorCode & HAL_UART_ERROR_ORE) {
+        __HAL_UART_CLEAR_OREFLAG(huart);
     } else {
         //this->onTxError(0);
     }
