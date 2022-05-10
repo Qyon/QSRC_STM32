@@ -46,14 +46,17 @@ private:
     uint16_t tmc2160_pin;
     ConfigurationTypeDef tmc2160_config;
 
+    uint32_t backup_register_address = 0;
+
     static uint32_t degreesToSteps(float degrees);
 public:
     MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *step_gpio, uint16_t step_pin,
-                         GPIO_TypeDef *dir_gpio, uint16_t dir_pin, GPIO_TypeDef *enable_gpio,
-                         uint16_t enable_pin, bool reverse_direction, uint16_t angle_minimum,
-                         uint16_t angle_maximum, SPI_HandleTypeDef *tmc2160_spi,
-                         GPIO_TypeDef *tmc2160_gpio, uint16_t tmc2160_pin, uint8 channel);
-    void init();
+                     GPIO_TypeDef *dir_gpio, uint16_t dir_pin, GPIO_TypeDef *enable_gpio,
+                     uint16_t enable_pin, bool reverse_direction, uint16_t angle_minimum,
+                     uint16_t angle_maximum, SPI_HandleTypeDef *tmc2160_spi,
+                     GPIO_TypeDef *tmc2160_gpio, uint16_t tmc2160_pin, uint8 channel,
+                     uint32_t backup_register_address);
+    void init(bool useBackedValue);
     void onTimer();
     void moveTo(float angle);
 

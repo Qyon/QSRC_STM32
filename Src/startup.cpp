@@ -14,10 +14,10 @@
 
 MotionController az(&htim2, az_step_GPIO_Port, az_step_Pin, az_dir_GPIO_Port, az_dir_Pin, az_enable_GPIO_Port, az_enable_Pin,
     false, 0, 360,
-    &hspi2, SPI2_SS1_GPIO_Port, SPI2_SS1_Pin, 1);
+    &hspi2, SPI2_SS1_GPIO_Port, SPI2_SS1_Pin, 1, RTC_BKP_DR2);
 MotionController el(&htim3, el_step_GPIO_Port, el_step_Pin, el_dir_GPIO_Port, el_dir_Pin, el_enable_GPIO_Port, el_enable_Pin,
                     false, 0, 90,
-    &hspi2, SPI2_SS2_GPIO_Port, SPI2_SS2_Pin, 0);
+    &hspi2, SPI2_SS2_GPIO_Port, SPI2_SS2_Pin, 0, RTC_BKP_DR3);
 RotorController controller(&huart1, &huart2, &hspi1, az_encoder_cs_GPIO_Port, az_encoder_cs_Pin,
                            el_encoder_cs_GPIO_Port, el_encoder_cs_Pin, &az, &el, aux_out_GPIO_Port, aux_out_Pin);
 /**

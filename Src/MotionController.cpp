@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <MotionController.h>
 #include <climits>
+#include <rtc.h>
 
 #include "MotionController.h"
 
@@ -83,13 +84,15 @@ MotionController::MotionController(TIM_HandleTypeDef *htim, GPIO_TypeDef *step_g
                                    GPIO_TypeDef *dir_gpio, uint16_t dir_pin, GPIO_TypeDef *enable_gpio,
                                    uint16_t enable_pin, bool reverse_direction, uint16_t angle_minimum,
                                    uint16_t angle_maximum, SPI_HandleTypeDef *tmc2160_spi,
-                                   GPIO_TypeDef *tmc2160_gpio, uint16_t tmc2160_pin, uint8 channel)
+                                   GPIO_TypeDef *tmc2160_gpio, uint16_t tmc2160_pin, uint8 channel,
+                                   uint32_t backup_register_address)
     : step_gpio(step_gpio), step_pin(step_pin),
       dir_gpio(dir_gpio), dir_pin(dir_pin),
       enable_gpio(enable_gpio), enable_pin(enable_pin), htim(htim),
       reverse_direction(reverse_direction),
       angle_minimum(angle_minimum),
-      angle_maximum(angle_maximum), tmc2160_spi(tmc2160_spi), tmc2160_gpio(tmc2160_gpio), tmc2160_pin(tmc2160_pin) {
+      angle_maximum(angle_maximum), tmc2160_spi(tmc2160_spi), tmc2160_gpio(tmc2160_gpio), tmc2160_pin(tmc2160_pin),
+      backup_register_address(backup_register_address) {
     acc_max = degreesToSteps(DEGREES_ACC_MAX);
     tmc2160_config.channel = channel;
 }
@@ -132,6 +135,7 @@ bool MotionController::isRunning() {
 }
 
 float MotionController::getAngle() {
+    HAL_RTCEx_BKUPWrite(&hrtc, backup_register_address, position_current);
     return stepsToDegrees(position_current);
 }
 
@@ -151,7 +155,10 @@ void MotionController::emergency_stop() {
     this->speed_current = 0;
 }
 
-void MotionController::init() {
+void MotionController::init(bool useBackedValue) {
+    if (useBackedValue) {
+        set(stepsToDegrees((int32_t)HAL_RTCEx_BKUPRead(&hrtc, backup_register_address)));
+    }
     if (tmc2160_spi != nullptr){
         tmc2160_init(&tmc2160, tmc2160_config.channel, &tmc2160_config, tmc2160_defaultRegisterResetState);
         tmc2160_reset(&tmc2160);

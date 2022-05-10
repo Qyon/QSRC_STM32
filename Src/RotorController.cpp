@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <math.h>
+#include <rtc.h>
 #include "RotorController.h"
 
 DS1307 t;
@@ -259,9 +260,17 @@ uint16_t RotorController::getAverageEncoderValue(const uint16_t  *rawEncoderValu
 }
 
 void RotorController::init() {
+    bool useBackedValue = true;
+
+    HAL_PWR_EnableBkUpAccess();
+    if (HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) != 0xac0bac0)
+    {
+        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, 0xac0bac0);
+        useBackedValue = false;
+    }
     HAL_TIM_Base_Start_IT(&htim4);
-    az->init();
-    el->init();
+    az->init(useBackedValue);
+    el->init(useBackedValue);
 
     startUartRx();
     debug("Start!");
