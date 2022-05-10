@@ -263,9 +263,10 @@ void RotorController::init() {
     bool useBackedValue = true;
 
     HAL_PWR_EnableBkUpAccess();
-    if (HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) != 0xac0bac0)
+    uint32_t rtcExBkupRead = HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1);
+    if (rtcExBkupRead != 0xbac0)
     {
-        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, 0xac0bac0);
+        HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, 0xbac0);
         useBackedValue = false;
     }
     HAL_TIM_Base_Start_IT(&htim4);

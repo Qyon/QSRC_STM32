@@ -135,7 +135,8 @@ bool MotionController::isRunning() {
 }
 
 float MotionController::getAngle() {
-    HAL_RTCEx_BKUPWrite(&hrtc, backup_register_address, position_current);
+    HAL_RTCEx_BKUPWrite(&hrtc, backup_register_address, position_current & 0xffff);
+    HAL_RTCEx_BKUPWrite(&hrtc, backup_register_address+1, position_current >> 16 & 0xffff);
     return stepsToDegrees(position_current);
 }
 
@@ -157,7 +158,8 @@ void MotionController::emergency_stop() {
 
 void MotionController::init(bool useBackedValue) {
     if (useBackedValue) {
-        set(stepsToDegrees((int32_t)HAL_RTCEx_BKUPRead(&hrtc, backup_register_address)));
+        uint32_t value = HAL_RTCEx_BKUPRead(&hrtc, backup_register_address) | HAL_RTCEx_BKUPRead(&hrtc, backup_register_address+1) << 16;
+        set(stepsToDegrees((int32_t)value));
     }
     if (tmc2160_spi != nullptr){
         tmc2160_init(&tmc2160, tmc2160_config.channel, &tmc2160_config, tmc2160_defaultRegisterResetState);
